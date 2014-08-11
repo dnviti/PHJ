@@ -3,7 +3,7 @@
  *
 * @author Tanase Razvan
 * @return Events created in the main.phj file.This is a PARSER for PHJ.
-* @version 1.29B Official 28/07/2014
+* @version 1.30 Official 11/08/2014
 */
 header('Content-Type: text/html; charset=utf-8');
 if(!isset($_GET["focus"]))
@@ -492,11 +492,23 @@ class PHJ
 													";
 												break;
 												
-											case "use_list":
+											case "list":
 												$send=scandir($value);
+												
+												foreach ($send as $piece)
+												{
+													if($piece!="." && $piece!=".." )
+													{
+														if(substr($value, 0, 2)=="./")
+														{
+															$value=substr($value, 2);
+														}
+														print "<script type='text/javascript' src='$root/$value/$piece' ></script>";
+													}
+												}
 												break;
 									
-											case "use_file":
+											case "file":
 												$send="<script type='text/javascript' src='$root/$value' ></script>";
 												break;
 											case "":
@@ -511,16 +523,67 @@ class PHJ
 												break;
 										}
 										break;
+									
+										
+									case "phj":
+										switch ($tag)
+										{
+											case "list":
+												if(!file_exists("$value"))
+												{
+													print "<font color='#d30'>The specified directory does not exist.</font>";
+												}
+												else
+												{
+													$phj_script_list=scandir($value);
+													foreach ($phj_script_list as $phj_script)
+													{
+														if($phj_script!="." && $phj_script!=".." && !is_dir("$value/$phj_script"))
+														{
+															phj("$value/$phj_script");
+														}
+													}
+												}
+												break;
+											
+											case "file":
+												if(!file_exists("$value"))
+												{
+													print "<font color='#d30'>The specified directory does not exist.</font>";
+												}
+												else
+												{
+													phj($value);
+												}
+												break;
+												
+											case "":
+												phj($value);
+												break;
+										}
+										break;
 										
 									case "css":
 										switch ($tag)
 										{
 											
-											case "use_list":
+											case "list":
 												$send=scandir($value);
+												
+												foreach ($send as $piece)
+												{
+													if($piece!="." && $piece!="..")
+													{
+														if(substr($value, 0, 2)=="./")
+														{
+															$value=substr($value, 2);
+														}
+														print "<link rel='stylesheet' type='text/css' href='$root/$value/$piece' />";
+													}
+												}
 												break;
 												
-											case "use_file":
+											case "file":
 												$send="<link rel='stylesheet' type='text/css' href='$root/$value' />";
 												break;
 											case "":
@@ -632,7 +695,7 @@ class PHJ
 														
 														foreach ($_SESSION["data_list"] as $ajax_var)
 														{
-															$ajax_var_name=str_replace("HTML:", "", str_replace(".", "class_", str_replace("#", "id_", $ajax_var)));
+															$ajax_var_name=str_replace("this_element", "this_element", str_replace("HTML:", "", str_replace(".", "class_", str_replace("#", "id_", $ajax_var))));
 															
 															$ajax_no_var=$ajax_var;
 															
@@ -642,6 +705,10 @@ class PHJ
 															{
 																$send.="
 																var $ajax_var_name=$(\"$ajax_var\").html();";
+															}elseif(substr($ajax_no_var, 0,12)=="this_element")
+															{
+																$send.="
+																var $ajax_var_name=$(this).val();";
 															}
 															else
 															{
@@ -658,12 +725,16 @@ class PHJ
 																$count_var=1;
 																foreach ($_SESSION["data_list"] as $ajax_var)
 																{
-																	$ajax_var_name=str_replace("HTML:", "",str_replace(".", "class_", str_replace("#", "id_", $ajax_var)));
+																	$ajax_var_name=str_replace("this_element", "this_element", str_replace("HTML:", "",str_replace(".", "class_", str_replace("#", "id_", $ajax_var))));
 																	
 																	if ($count_var==1)
 																	{
 																		$send.="'$ajax_var_name='+$ajax_var_name";
 																		$count_var++;
+																	}elseif(substr($ajax_no_var, 0,12)=="this_element")
+																	{
+																		$send.="
+																		var $ajax_var_name=$(this).val();";
 																	}
 																	else
 																	{
@@ -671,10 +742,9 @@ class PHJ
 																	}
 																}
 																$send.=",
-																success: function()
-																{
+																success: 
 																	$do
-																}
+																
 															});
 														});
 														});
@@ -858,11 +928,32 @@ class PHJ
 										switch ($tag)
 										{
 											case "phj_list":
-												$send="src_phj_list";
+												if(!file_exists("$value"))
+												{
+													print "<font color='#d30'>The specified directory does not exist.</font>";
+												}
+												else
+												{
+													$phj_script_list=scandir($value);
+													foreach ($phj_script_list as $phj_script)
+													{
+														if($phj_script!="." && $phj_script!=".." && !is_dir("$value/$phj_script"))
+														{
+															phj("$value/$phj_script");
+														}
+													}
+												}
 												break;
 												
 											case "phj":
-												$send="src_phj";
+												if(!file_exists("$value"))
+												{
+													print "<font color='#d30'>The specified directory does not exist.</font>";
+												}
+												else
+												{
+													phj($value);
+												}
 												break;
 											case "phj_var":
 												if(!file_exists(".phj_vars/$value"))
@@ -871,13 +962,20 @@ class PHJ
 												}
 												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
 												{
-													$src_phj = new PHJ("$title", "$lang", "$root",".phj_vars/$value");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
+													$src_phj = new PHJ("$title", "$lang", "$root","");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
 													call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione, quindi del codice a matrioska.*/
 												}
 												break;
 												
 											case "php":
-												$send="src_php";
+												if(strpos($value, ".html")==strlen($value)-5)
+												{
+													print file_get_contents($value);
+												}
+												else 
+												{
+													include ($value);
+												}
 												break;
 												
 											case "img":
@@ -973,35 +1071,12 @@ class PHJ
 								}
 								if(isset($send))
 								{
-									if (is_array($send))
-									{
-										foreach ($send as $piece)
-										{
-											if($piece!="." && $piece!="..")
-											{
-												if(substr($value, 0, 2)=="./")
-												{
-													$value=substr($value, 2);
-												}
-												switch ($index)
-												{
-													case "css":
-														
-														print "<link rel='stylesheet' type='text/css' href='$root/$value/$piece' />";
-														break;
-														/*----------------------------*/
-													case "js":
-														print "<script type='text/javascript' src='$root/$value/$piece' ></script>";
-														break;
-												}
-											}
-										}
-									}
+									
 									/*****************************************
 									*
-									*
+									*HARVEST STARTS HERE
 									*/
-									elseif(!is_array($send))
+									if(!is_array($send))
 									{
 										switch ($send)
 										{
@@ -1049,45 +1124,6 @@ class PHJ
 													print_r($url);
 												}
 	
-												break;
-											case "src_php":
-												if(strpos($value, ".html")==strlen($value)-5)
-												{
-													print file_get_contents($value);
-												}
-												else 
-												{
-													include ($value);
-												}
-												break;
-											case "src_phj":
-												if(!file_exists("$value"))
-												{
-													print "<font color='#d30'>The specified directory does not exist.</font>";
-												}
-												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
-												{
-													$src_phj = new PHJ("$title", "$lang", "$root","$value");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
-													call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione, quindi del codice a matrioska.*/
-												}
-												break;
-											case "src_phj_list":
-												if(!file_exists("$value"))
-												{
-													print "<font color='#d30'>The specified directory does not exist.</font>";
-												}
-												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
-												{
-													$phj_script=scandir($value);
-													foreach ($phj_script as $phj_script_read)
-													{
-														if($phj_script_read!="." && $phj_script_read!="..")
-														{
-															$src_phj = new PHJ("$title", "$lang", "$root","$value/$phj_script_read");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
-															call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione, quindi del codice a matrioska.*/
-														}
-													}
-												}
 												break;
 											default:
 												print $send;
