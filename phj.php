@@ -3,7 +3,7 @@
  *
 * @author Tanase Razvan
 * @return Events created in the main.phj file.This is a PARSER for PHJ.
-* @version 1.30 Official 11/08/2014
+* @version 1.30A Official 14/08/2014
 */
 header('Content-Type: text/html; charset=utf-8');
 if(!isset($_GET["focus"]))
@@ -492,23 +492,11 @@ class PHJ
 													";
 												break;
 												
-											case "list":
+											case "use_list":
 												$send=scandir($value);
-												
-												foreach ($send as $piece)
-												{
-													if($piece!="." && $piece!=".." )
-													{
-														if(substr($value, 0, 2)=="./")
-														{
-															$value=substr($value, 2);
-														}
-														print "<script type='text/javascript' src='$root/$value/$piece' ></script>";
-													}
-												}
 												break;
 									
-											case "file":
+											case "use_file":
 												$send="<script type='text/javascript' src='$root/$value' ></script>";
 												break;
 											case "":
@@ -523,67 +511,16 @@ class PHJ
 												break;
 										}
 										break;
-									
-										
-									case "phj":
-										switch ($tag)
-										{
-											case "list":
-												if(!file_exists("$value"))
-												{
-													print "<font color='#d30'>The specified directory does not exist.</font>";
-												}
-												else
-												{
-													$phj_script_list=scandir($value);
-													foreach ($phj_script_list as $phj_script)
-													{
-														if($phj_script!="." && $phj_script!=".." && !is_dir("$value/$phj_script"))
-														{
-															phj("$value/$phj_script");
-														}
-													}
-												}
-												break;
-											
-											case "file":
-												if(!file_exists("$value"))
-												{
-													print "<font color='#d30'>The specified directory does not exist.</font>";
-												}
-												else
-												{
-													phj($value);
-												}
-												break;
-												
-											case "":
-												phj($value);
-												break;
-										}
-										break;
 										
 									case "css":
 										switch ($tag)
 										{
 											
-											case "list":
+											case "use_list":
 												$send=scandir($value);
-												
-												foreach ($send as $piece)
-												{
-													if($piece!="." && $piece!="..")
-													{
-														if(substr($value, 0, 2)=="./")
-														{
-															$value=substr($value, 2);
-														}
-														print "<link rel='stylesheet' type='text/css' href='$root/$value/$piece' />";
-													}
-												}
 												break;
 												
-											case "file":
+											case "use_file":
 												$send="<link rel='stylesheet' type='text/css' href='$root/$value' />";
 												break;
 											case "":
@@ -649,18 +586,10 @@ class PHJ
 														$send.="setInterval(function() {";
 													}
 													$send.="
-														$($t).$on_event(function(){";
-															if(file_exists($data))
-															{
-																$value_of_load="\"$data\"";
-															}
-															else
-															{
-																$value_of_load="window.location.href+\" $value\"";
-															}
-															$send.="
+														$($t).$on_event(function(){
+															
+															$(\"$value\").load(\"$data\");
 															$do
-															$(\"$value\").load($value_of_load);
 															";
 														$send.="});";
 													if($time!="none")
@@ -928,32 +857,11 @@ class PHJ
 										switch ($tag)
 										{
 											case "phj_list":
-												if(!file_exists("$value"))
-												{
-													print "<font color='#d30'>The specified directory does not exist.</font>";
-												}
-												else
-												{
-													$phj_script_list=scandir($value);
-													foreach ($phj_script_list as $phj_script)
-													{
-														if($phj_script!="." && $phj_script!=".." && !is_dir("$value/$phj_script"))
-														{
-															phj("$value/$phj_script");
-														}
-													}
-												}
+												$send="src_phj_list";
 												break;
 												
 											case "phj":
-												if(!file_exists("$value"))
-												{
-													print "<font color='#d30'>The specified directory does not exist.</font>";
-												}
-												else
-												{
-													phj($value);
-												}
+												$send="src_phj";
 												break;
 											case "phj_var":
 												if(!file_exists(".phj_vars/$value"))
@@ -962,20 +870,13 @@ class PHJ
 												}
 												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
 												{
-													$src_phj = new PHJ("$title", "$lang", "$root","");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
+													$src_phj = new PHJ("$title", "$lang", "$root",".phj_vars/$value");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
 													call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione, quindi del codice a matrioska.*/
 												}
 												break;
 												
 											case "php":
-												if(strpos($value, ".html")==strlen($value)-5)
-												{
-													print file_get_contents($value);
-												}
-												else 
-												{
-													include ($value);
-												}
+												$send="src_php";
 												break;
 												
 											case "img":
@@ -1071,12 +972,35 @@ class PHJ
 								}
 								if(isset($send))
 								{
-									
+									if (is_array($send))
+									{
+										foreach ($send as $piece)
+										{
+											if($piece!="." && $piece!="..")
+											{
+												if(substr($value, 0, 2)=="./")
+												{
+													$value=substr($value, 2);
+												}
+												switch ($index)
+												{
+													case "css":
+														
+														print "<link rel='stylesheet' type='text/css' href='$root/$value/$piece' />";
+														break;
+														/*----------------------------*/
+													case "js":
+														print "<script type='text/javascript' src='$root/$value/$piece' ></script>";
+														break;
+												}
+											}
+										}
+									}
 									/*****************************************
 									*
-									*HARVEST STARTS HERE
+									*
 									*/
-									if(!is_array($send))
+									elseif(!is_array($send))
 									{
 										switch ($send)
 										{
@@ -1124,6 +1048,45 @@ class PHJ
 													print_r($url);
 												}
 	
+												break;
+											case "src_php":
+												if(strpos($value, ".html")==strlen($value)-5)
+												{
+													print file_get_contents($value);
+												}
+												else 
+												{
+													include ($value);
+												}
+												break;
+											case "src_phj":
+												if(!file_exists("$value"))
+												{
+													print "<font color='#d30'>The specified directory does not exist.</font>";
+												}
+												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
+												{
+													$src_phj = new PHJ("$title", "$lang", "$root","$value");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
+													call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione, quindi del codice a matrioska.*/
+												}
+												break;
+											case "src_phj_list":
+												if(!file_exists("$value"))
+												{
+													print "<font color='#d30'>The specified directory does not exist.</font>";
+												}
+												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
+												{
+													$phj_script=scandir($value);
+													foreach ($phj_script as $phj_script_read)
+													{
+														if($phj_script_read!="." && $phj_script_read!="..")
+														{
+															$src_phj = new PHJ("$title", "$lang", "$root","$value/$phj_script_read");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
+															call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione, quindi del codice a matrioska.*/
+														}
+													}
+												}
 												break;
 											default:
 												print $send;
