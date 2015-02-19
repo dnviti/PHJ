@@ -3,7 +3,7 @@
  *
 * @author Tanase Razvan
 * @return Events created in the main.phj file.This is a PARSER for PHJ.
-* @version 1.27A Official 19/07/2014
+* @version 1.30 Official 19/02/2015
 */
 header('Content-Type: text/html; charset=utf-8');
 if(!isset($_GET["focus"]))
@@ -35,7 +35,7 @@ function newPHJ($path,$content){
 }
 class PHJ
 {
-    public $title;		/*side_news (e.g)*/
+    	public $title;		/*side_news (e.g)*/
 	public $lang;		/*it*/
 	public $root;		/*document root*/
 	public $source;		/*.PHJ*/
@@ -74,19 +74,25 @@ class PHJ
 		{
 			$my_file=$file;
 		}
-
-			$array = preg_split('/;\s*(?!\s+)/', $my_file);
+			$code_type="phj";
+			
+			$array = preg_split('/;\s+(?!\s+)/', $my_file);
 			$line_number=1;
 			foreach ($array as $content)
 			{
 				$content=str_replace("\t", "", $content);
 				
-				if ($content=="\\n;") {
+				if ($content==">") {
 					print "<br />";
+				}
+				elseif(substr($content,0,4)=='php:')
+				{
+					$phpString=str_replace("\s", "", preg_replace('/!\s+(?!\s+)/', ";", substr($content,4)));
+					eval("$phpString");
 				}
 				elseif(substr($content,0,1)=="$")
 				{
-					$phj_tag=strtolower(substr($content,1,strpos($content, " ")));
+					$phj_tag=strtolower(substr($content,1,strpos($content," ")-1));
 					switch ($phj_tag)
 					{
 						case "html":
@@ -95,7 +101,7 @@ class PHJ
 							break;
 						case "head":
 							print "<head>
-								<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-16\">";
+								<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\">";
 							break;
 						default:
 							print "<".substr($content,1).">";
@@ -108,13 +114,26 @@ class PHJ
 				}
 				elseif( substr($content,0,1)==":")
 				{
-					print "<!--".substr($content,2)."-->";
+					print "<!-- ".substr($content,1)." -->";
 				}
-				elseif(substr($content,0,4)=='>php')
+				elseif(substr($content,0,1)=="<")
 				{
-					$phpString=preg_replace('/!\s+(?!\s+)/', ";", substr($content,4));
-					eval("$phpString");
+					switch (substr($content,1,strpos($content," ")-1))
+					{
+						case "html":
+							print "<!DOCTYPE HTML>
+							<html lang='$lang'>";
+							break;
+						case "head":
+							print "<head>
+								<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\">";
+							break;
+						default:
+							print "$content";
+							break;
+					}
 				}
+				
 				elseif ($content==null)
 				{
 					/*do nothing*/
@@ -206,11 +225,11 @@ class PHJ
 										eval('$'."$attribute_alias".'=$attribute;');
 										if(isset($var))
 										{
-											$_SESSION["var$var"]=0;
-											if($_SESSION["var_$var"]==0)
+											$_SESSION["var$var"]=false;
+											if($_SESSION["var_$var"]==false)
 											{
 												$content=str_replace("var[\"$var\"]", "", $content);
-												file_put_contents("$root/.phj_vars/$var.phj.var", $content);
+												file_put_contents(".phj_vars/$var.phj.var", "$content;");
 												$_SESSION["var_$var"]=0;
 											}
 											else
@@ -281,20 +300,35 @@ class PHJ
 								$value=str_replace($break, "<br />", substr($content,$ss,$es-$ss));
 								
 								$tag=substr($content, $indexPos+strlen($index)+1, $ss-(strlen($index)+2)-1);
-								;
+								$index=str_replace("\s","",$index);
+								$value=str_replace("\s","",$value);
+								$do=str_replace("\s","",$do);
 								switch ($index)
 								{
-									case "<": /*ignore this*/
-										$lol="asdasd";
-										$tag=new $tag();
-										if($value!=null)
-										{
-											$args=preg_split('/,\s*(?!\s+)/', $args);
-											$tag->$value();
+									case "tool":
+										switch ($tag){
+											case "tip":
+												switch ($value){
+													case "on":
+													case "enable":
+														$send="$(document).on('mousemove', function(e){
+														    $('#tooltip').css({
+														        left:  e.pageX+15,
+														        top:   e.pageY+30
+														     });
+														    $(\".tooltip\").mouseover(function(){
+														    	var tooltip=$(this).attr(\"tooltip\");
+														    	$(\"#tooltip\").fadeIn(0).html(tooltip);
+														    });
+														    $(\".tooltip\").mouseout(function(){
+														    	$(\"#tooltip\").fadeOut(0);
+														    });
+														 });";
+														break;
+												}
+												break;
 										}
-										$send=null;
 										break;
-									
 									case "email":
 									case "EMAIL":
 									case "e-mail":
@@ -491,11 +525,11 @@ class PHJ
 													";
 												break;
 												
-											case "use_list":
+											case "uselist":
 												$send=scandir($value);
 												break;
 									
-											case "use_file":
+											case "usefile":
 												$send="<script type='text/javascript' src='$root/$value' ></script>";
 												break;
 											case "":
@@ -515,11 +549,11 @@ class PHJ
 										switch ($tag)
 										{
 											
-											case "use_list":
+											case "uselist":
 												$send=scandir($value);
 												break;
 												
-											case "use_file":
+											case "usefile":
 												$send="<link rel='stylesheet' type='text/css' href='$root/$value' />";
 												break;
 											case "":
@@ -551,11 +585,13 @@ class PHJ
 									case "onmouseup":
 									case "onmouseout":
 									case "onkeypress":
+									case "onscroll":
 										$on_event=substr($index, 2, strlen($index)-2);
-
-										if($t!="document")
-										{
-											$t="\"$t\"";
+								switch (substr(trim($t), 0,4)){
+											case "dom.": $t=substr($t, strpos($t, "dom.")+4); break;
+											default:
+												$t="\"$t\"";
+												break;
 										}
 										switch ($tag)
 										{
@@ -626,26 +662,34 @@ class PHJ
 												$_SESSION["data_list"]=preg_split('/,\s*(?=\S*)/', $data);
 												$send="
 													<script type=\"text/javascript\">
-														$(\"body\").ready(function(){
+														$(document).ready(function(){
 														$($t).$on_event(function(){";
 														
 														foreach ($_SESSION["data_list"] as $ajax_var)
 														{
+															
 															$ajax_var_name=str_replace("HTML:", "", str_replace(".", "class_", str_replace("#", "id_", $ajax_var)));
 															
-															$ajax_no_var=$ajax_var;
+															$ajax_htmlcheck_var=$ajax_var;
 															
 															$ajax_var=str_replace("HTML:", "", $ajax_var);
 															
-															if(substr($ajax_no_var, 0,5)=="HTML:")
+															
+															if(substr($ajax_htmlcheck_var, 0,5)=="HTML:")
 															{
 																$send.="
 																var $ajax_var_name=$(\"$ajax_var\").html();";
 															}
 															else
 															{
-																$send.="
-																var $ajax_var_name=$(\"$ajax_var\").val();";
+																if($ajax_var=="this"){
+																	$send.="
+																	var this_".substr($t, 2, strlen($t)-3)."=$(this).val();";
+																}else{
+																	$send.="
+																	var $ajax_var_name=$(\"$ajax_var\").val();";
+																}
+																
 															}
 															
 														}
@@ -657,20 +701,33 @@ class PHJ
 																$count_var=1;
 																foreach ($_SESSION["data_list"] as $ajax_var)
 																{
-																	$ajax_var_name=str_replace("HTML:", "",str_replace(".", "class_", str_replace("#", "id_", $ajax_var)));
-																	
-																	if ($count_var==1)
-																	{
-																		$send.="'$ajax_var_name='+$ajax_var_name";
-																		$count_var++;
+																	$ajax_var_name= str_replace("HTML:", "",str_replace(".", "class_", str_replace("#", "id_", $ajax_var)));
+																	if($ajax_var=="this"){
+																		if ($count_var==1)
+																		{
+																			$send.="'this_".substr($t, 2, strlen($t)-3)."='+this_".substr($t, 2, strlen($t)-3);
+																			$count_var++;
+																		}
+																		else
+																		{
+																			$send.="+'&$ajax_var_name='+$ajax_var_name";
+																		}
 																	}
 																	else
 																	{
-																		$send.="+'&$ajax_var_name='+$ajax_var_name";
+																		if ($count_var==1)
+																		{
+																			$send.="'$ajax_var_name='+$ajax_var_name";
+																			$count_var++;
+																		}
+																		else
+																		{
+																			$send.="+'&$ajax_var_name='+$ajax_var_name";
+																		}
 																	}
 																}
 																$send.=",
-																success: function()
+																success: function(data)
 																{
 																	$do
 																}
@@ -709,6 +766,9 @@ class PHJ
 									case "@":
 										switch ($tag)
 										{
+											case "script":
+												$send="<script type='text/javascript'>$do</script>";
+												break;
 											case "reclink":
 											case "relink":
 											case "recognizelink":
@@ -740,7 +800,10 @@ class PHJ
 												break;
 											case "style":
 												$value=str_replace("!", ";", $value);
-												$send="<style>$value</style>";
+												$send="<style $custom>$value</style>";
+												break;
+											case "script":
+													$send="<script type='text/javascript' $custom>$value</script>";
 												break;
 											case "[button]":
 													if(isset($inside))
@@ -752,7 +815,7 @@ class PHJ
 														$button_url="$value";
 													}
 													$send="
-													<input onclick='window.location.replace(\"$button_url\")' title='$title' align='$align' target='$t' id='$id' class='$class' name='$name' type='button' value='$value' />
+													<input onclick='window.location.replace(\"$button_url\")' title='$title' align='$align' target='$t' id='$id' class='$class' name='$name' type='button' value='$value' $custom />
 													
 													";
 												break;
@@ -760,7 +823,7 @@ class PHJ
 												$send=$value;
 												break;
 											default:
-												$send="<$tag title='$title' align='$align' editable='$editable' id='$id' class='$class' name='$name' >$value</$tag>";
+												$send="<$tag title='$title' align='$align' editable='$editable' id='$id' class='$class' name='$name' $custom>$value</$tag>";
 												break;
 											
 										}
@@ -773,7 +836,7 @@ class PHJ
 											case "pay-pal":
 												
 												$send="
-														<form method=\"$method\" name=\"$name\" action=\"$value\">
+														<form method=\"$method\" name=\"$name\" action=\"$value\" $custom>
 															<input type=\"hidden\" name=\"business\" value=\"$vendor\" />
 															<input type=\"hidden\" name=\"cmd\" value=\"$cmd\" />
 															<input type=\"hidden\" name=\"upload\" value=\"$upload\">
@@ -805,28 +868,28 @@ class PHJ
 												break;
 											case "txt":
 											case "text":
-												$send="<input title='$title' maxlength='$max' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML' />";
+												$send="<input $custom title='$title' maxlength='$max' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML' />";
 												break;
 											case "voice":
-												$send="<input type=\"text\" speech>";
+												$send="<input $custom type=\"text\" speech>";
 												break;
 											case "pass":
 											case "password":
-												$send="<input title='$title' maxlength='$max' id='$id' class='$class' type='password' name='$name' placeholder='$value' value='$HTML' />";
+												$send="<input $custom title='$title' maxlength='$max' id='$id' class='$class' type='password' name='$name' placeholder='$value' value='$HTML' />";
 												break;
 											case "mail":
 											case "email":
-												$send="<input title='$title' maxlength='$max' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
+												$send="<input $custom title='$title' maxlength='$max' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
 												break;
 											case "txtarea":
 											case "textarea":
-												$send="<textarea title='$title' maxlength='$max' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
+												$send="<textarea $custom title='$title' maxlength='$max' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
 												break;
 											case "option":
-												$send="<option id='$id' class='$class' value='$value_item'>$value</option>";
+												$send="<option $custom id='$id' class='$class' value='$value_item'>$value</option>";
 											break;
 											default:
-												$send="<input title='$title' id='$id' class='$class' type='$tag' name='$name' value='$value' />";
+												$send="<input $custom title='$title' id='$id' class='$class' type='$tag' name='$name' value='$value' />";
 												break;
 											
 										}
@@ -835,45 +898,73 @@ class PHJ
 											switch ($tag)
 											{
 												case "txt":
-													$send="<input title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
+													$send="<input $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
 													break;
 												case "pass":
-													$send="<input title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
+													$send="<input $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
 													break;
 												case "mail":
 												case "email":
-													$send="<input title='$title' maxlength='$max' required='required' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
+													$send="<input $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
 													break;
 												case "txtarea":
 												case "textarea":
-													$send="<textarea title='$title' maxlength='$max' required='required' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
+													$send="<textarea $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
 													break;
 												default:
-													$send="<input title='$title' required='required' id='$id' class='$class' type='$tag' name='$name' placeholder='$value' />";
+													$send="<input $custom title='$title' required='required' id='$id' class='$class' type='$tag' name='$name' placeholder='$value' />";
 													break;
 											}
 											break;
-									case "src":
+									case "phj":
 										switch ($tag)
 										{
-											case "phj_list":
-												$send="src_phj_list";
+											case "use_list":
+												$phj_script=scandir($value);
+												foreach ($phj_script as $phj_script_read)
+												{
+													if(!file_exists("$value") || !is_dir("$value"))
+													{
+														print "<font color='#d30'>The specified <b>directory</b> does not exist.</font>";
+													}
+													else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
+													{
+														if($phj_script_read!="." && $phj_script_read!="..")
+														{
+															$src_phj = new PHJ("$title", "$lang", "$root","$value/$phj_script_read");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
+															call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione.*/
+														}
+													}
+												}
 												break;
-												
-											case "phj":
-												$send="src_phj";
+											
+											case "use_file":
+												if(!file_exists("$value"))
+												{
+													print "<font color='#d30'>The specified <b>file</b> does not exist.</font>";
+												}
+												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
+												{
+													$src_phj = new PHJ("$title", "$lang", "$root","$value");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
+													call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione*/
+												}
 												break;
-											case "phj_var":
+											case "use_var":
 												if(!file_exists(".phj_vars/$value"))
 												{
-													print "<font color='#d30'>The specified directory does not exist.</font>";
+													print "<font color='#d30'>The specified <b>variable</b> does not exist.</font>";
 												}
 												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
 												{
 													$src_phj = new PHJ("$title", "$lang", "$root",".phj_vars/$value");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
-													call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione, quindi del codice a matrioska.*/
+													call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione.*/
 												}
 												break;
+										}
+										break;
+									case "src":
+										switch ($tag)
+										{
 												
 											case "php":
 												$send="src_php";
@@ -1012,7 +1103,6 @@ class PHJ
 													$url=rtrim($url,'/');
 													$url=explode("/", $url);
 													
-													print "<br />";
 													
 													if(isset($url[0]))
 													{
@@ -1057,35 +1147,6 @@ class PHJ
 												else 
 												{
 													include ($value);
-												}
-												break;
-											case "src_phj":
-												if(!file_exists("$value"))
-												{
-													print "<font color='#d30'>The specified directory does not exist.</font>";
-												}
-												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
-												{
-													$src_phj = new PHJ("$title", "$lang", "$root","$value");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
-													call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione, quindi del codice a matrioska.*/
-												}
-												break;
-											case "src_phj_list":
-												if(!file_exists("$value"))
-												{
-													print "<font color='#d30'>The specified directory does not exist.</font>";
-												}
-												else/*creo un nuovo oggetto PHJ e sfrutto la funzione fill()*/
-												{
-													$phj_script=scandir($value);
-													foreach ($phj_script as $phj_script_read)
-													{
-														if($phj_script_read!="." && $phj_script_read!="..")
-														{
-															$src_phj = new PHJ("$title", "$lang", "$root","$value/$phj_script_read");/*nuovo oggetto; indica il codice PHJ dentro il codice PHJ.*/
-															call_user_func_array(array($src_phj, "fill"), array());/*Self call della funzione, quindi del codice a matrioska.*/
-														}
-													}
 												}
 												break;
 											default:
