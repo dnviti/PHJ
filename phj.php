@@ -3,7 +3,7 @@
  *
 * @author Tanase Razvan
 * @return Events created in the main.phj file.This is a PARSER for PHJ.
-* @version 1.30 Official 19/02/2015
+* @version 1.30 Official 07/02/2015
 */
 header('Content-Type: text/html; charset=utf-8');
 if(!isset($_GET["focus"]))
@@ -35,7 +35,7 @@ function newPHJ($path,$content){
 }
 class PHJ
 {
-    	public $title;		/*side_news (e.g)*/
+    public $title;		/*side_news (e.g)*/
 	public $lang;		/*it*/
 	public $root;		/*document root*/
 	public $source;		/*.PHJ*/
@@ -323,7 +323,8 @@ class PHJ
 														    $(\".tooltip\").mouseout(function(){
 														    	$(\"#tooltip\").fadeOut(0);
 														    });
-														 });";
+														 });
+														".phj("@:div(\"\")#[\"tooltip\"];");
 														break;
 												}
 												break;
