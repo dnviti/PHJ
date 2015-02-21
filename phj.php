@@ -161,6 +161,7 @@ class PHJ
 										"align:align",
 										"limit:limit",
 										"from:from",
+										"to:to",
 										"extract:extract",
 										"data:data",
 										"method:method",
@@ -214,9 +215,9 @@ class PHJ
 									$attribute_alias=$attr[1];
 									
 									/*//////////////////////////////////////////////////////////...[""]*/
-									if(strpos(substr($content, $ss), "$attribute_name"."[") == true)
+									if(strpos(strtolower(substr($content, $ss)), "$attribute_name"."[") == true)
 									{
-										$attribute_start=strpos(substr($content, $es), "$attribute_name"."[");
+										$attribute_start=strpos(strtolower(substr($content, $es)), "$attribute_name"."[");
 									
 										$attribute_length=strpos(substr($content, $es+$attribute_start), "]");
 									
@@ -444,24 +445,14 @@ class PHJ
 															switch ($method)
 															{
 																case "get":
-																case "GET":
 																	$_GET["$name"]=$value;
 																	break;
 																case "post":
-																case "POST":
 																	$_POST["$name"]=$value;
 																	break;
 															}
-															if(isset($_GET["$value"]))
-															{
-																$send=$_GET["$value"];
-															}
-															else
-															{
-																$send=$or;
-															}
-														}else{ throw new Exception("Specify a <b>name</b> for <b><u>set:data(\"\")method[\"\"];</u></b>");}
-													}else{ throw new Exception("Specify a <b>method</b> for <b><u>set:data(\"\")method[\"\"];</u></b>");}
+														}else{ throw new Exception("Specify a <b>name</b> for your variable.");}
+													}else{ throw new Exception("Specify a <b>method</b> for your variable.");}
 													break;
 											}
 										break;
@@ -481,7 +472,7 @@ class PHJ
 												}
 												else
 												{
-													$_SESSION["query"]=mysql_query(str_replace("\"", "\"", $value));
+													$_SESSION["$value"]=mysql_query(str_replace("\"", "\"", $do));
 												}
 												break;
 										}
@@ -558,12 +549,12 @@ class PHJ
 												$send="<link rel='stylesheet' type='text/css' href='$root/$value' />";
 												break;
 											case "":
-												$value=preg_replace("/!\s*(?!\s+)/", ";", $value);
-												$send="<style>$value</style>";
+												$value=preg_replace("/!\s*(?!\s+)/", ";", $do);
+												$send="<style>$do</style>";
 												break;
 											default:
-												$value=preg_replace("/!\s*(?!\s+)/", ";", $value);
-												$send="<style>$value</style>";
+												$value=preg_replace("/!\s*(?!\s+)/", ";", $do);
+												$send="<style>$do</style>";
 												break;
 										}
 										break;
@@ -587,180 +578,186 @@ class PHJ
 									case "onmouseout":
 									case "onkeypress":
 									case "onscroll":
-										$on_event=substr($index, 2, strlen($index)-2);
-								switch (substr(trim($t), 0,4)){
-											case "dom.": $t=substr($t, strpos($t, "dom.")+4); break;
-											default:
-												$t="\"$t\"";
-												break;
-										}
-										switch ($tag)
+										if(substr(trim($t), 0,1)=="#" || 
+											substr(trim($t), 0,1)=="." || 
+											substr(trim($t), 0,4)=="dom." ||
+											substr(trim($t), 0,5)=="html.")
 										{
-											case "data_set":
-													$send= "<script type='text/javascript'>";
-													if($index!="inline")
-													{
-														$send.="	$($t).$on_event(function(){";
-													}
-																$send.="			
-																	$(\"$value\").data('$data_alias','$data')!
-																	var $data_alias=$(\"$value\").data('$data_alias')!
-													
-																	$do";
-													if($index!="inline")
-													{			
-														$send.="	});";
-													}
-													$send.="</script>";
-													
-												break;
-											case "load":
-													$send="
-													<script type=\"text/javascript\">";
-													if($time!="none")
-													{
-														$send.="setInterval(function() {";
-													}
-													$send.="
-														$($t).$on_event(function(){";
-															if(file_exists($data))
-															{
-																$value_of_load="\"$data\"";
-															}
-															else
-															{
-																$value_of_load="window.location.href+\" $value\"";
-															}
-															$send.="
-															$do
-															$(\"$value\").load($value_of_load);
-															";
-														$send.="});";
-													if($time!="none")
-													{
-														$send.="}, $time);";
-													}
-													$send.="</script>";
-												break;
-											case "js":
-											case "javascript":
-													$send="
-													<script type=\"text/javascript\">";
-													if($index!="inline")
-													{
-														$send.="$($t).$on_event(function(){";
-													}
-														
-															$send.="$do";
-													if($index!="inline")
-													{
-														$send.="});";
-													}
-													$send.="	
-													</script>";
-												break;
-											case "ajax":
-												$_SESSION["data_list"]=preg_split('/,\s*(?=\S*)/', $data);
-												$send="
-													<script type=\"text/javascript\">
-														$(document).ready(function(){
-														$($t).$on_event(function(){";
-														
-														foreach ($_SESSION["data_list"] as $ajax_var)
+											$on_event=substr($index, 2, strlen($index)-2);
+											switch (substr(trim($t), 0,4))
+											{
+												case "dom.": $t=substr($t, strpos($t, "dom.")+4); break;
+												default:
+													$t="\"$t\"";
+													break;
+											}
+											switch (substr(trim($t), 0,4))
+											{
+												case "html.": 
+													$t="\"".substr($t, strpos($t, "html.")+5)."\"";
+													break;
+											}
+											switch (substr(trim($t), 0,1))
+											{
+												case ".": 
+													$t="\"".substr($t, strpos($t, ".")+1)."\"";
+													break;
+												case "#": 
+													$t="\"".substr($t, strpos($t, "#")+1)."\"";
+													break;
+											}
+											
+											print "<script type=\"text/javascript\">";
+											
+											if($index!="inline")
+											{
+												print "
+													$(document).ready(function(){";
+												if(isset($time))
+												if($time!="none")
+												{
+													print "setInterval(function() {";
+												}
+												print "
+													$($t).$on_event(function(){";
+											}
+											switch ($tag)
+											{
+												case "data_set":
+													print "			
+														$(\"$value\").data('$data_alias','$data')!
+														var $data_alias=$(\"$value\").data('$data_alias')!
+										
+														$do";
+													break;
+												case "load":
+														if(file_exists($data))
 														{
-															
-															$ajax_var_name=str_replace("HTML:", "", str_replace(".", "class_", str_replace("#", "id_", $ajax_var)));
-															
-															$ajax_htmlcheck_var=$ajax_var;
-															
-															$ajax_var=str_replace("HTML:", "", $ajax_var);
-															
-															
-															if(substr($ajax_htmlcheck_var, 0,5)=="HTML:")
+															print("$(\"$to\").load($value);");
+														}
+														else
+														{
+															print("$(\"$to\").load(window.location.href+\" $value\");");
+														}
+														print "$do";
+													break;
+												case "js":
+												case "javascript":
+														print $do;
+													break;
+												case "ajax":
+													$_SESSION["data_list"]=preg_split('/,\s*(?=\S*)/', $data);
+													print "\n";
+													foreach ($_SESSION["data_list"] as $ajax_var)
+													{
+														
+														$ajax_var_name=str_replace("HTML:", "", str_replace(".", "class_", str_replace("#", "id_", $ajax_var)));
+														
+														$ajax_htmlcheck_var=$ajax_var;
+														
+														switch (substr(trim($ajax_htmlcheck_var), 0,1))
+														{
+															case "#": 
+																print "var id_".substr($ajax_var, strpos(trim($ajax_var), "#")+1)."=$(\"$ajax_var\").val();"; 
+																break;
+															case ".": 
+																print "var class_".substr($ajax_var, strpos(trim($ajax_var), ".")+1)."=$(\"$ajax_var\").val();"; 
+																break;
+														}
+														switch (substr(trim($ajax_htmlcheck_var), 0,5))
+														{
+															case "html.": 
+																print "var html_".substr($ajax_var, strpos(trim($ajax_var), "html.")+5)."=$(\"".substr($ajax_var, strpos(trim($ajax_var), "html.")+5)."\").html();"; 
+																break;
+														}
+														switch (substr(trim($ajax_htmlcheck_var), 0,4))
+														{
+															case "dom.": 
+																print "var dom_".substr($ajax_var, strpos(trim($ajax_var), "dom.")+4)."=$(".substr($ajax_var, strpos(trim($ajax_var), "dom.")+4).").val();";
+																break;
+														}
+														
+														
+													}
+													print "
+														$.ajax({
+															type: \"$method\",
+															url: \"$root/$value\",
+															data: ";
+															$count_var=1;
+															foreach ($_SESSION["data_list"] as $ajax_var)
 															{
-																$send.="
-																var $ajax_var_name=$(\"$ajax_var\").html();";
-															}
-															else
-															{
-																if($ajax_var=="this"){
-																	$send.="
-																	var this_".substr($t, 2, strlen($t)-3)."=$(this).val();";
-																}else{
-																	$send.="
-																	var $ajax_var_name=$(\"$ajax_var\").val();";
+																switch (substr(trim($ajax_var), 0,1))
+																{
+																	case "#": 
+																		$ajax_var_name="id_".substr($ajax_var, strpos(trim($ajax_var), "#")+1); 
+																		break;
+																	case ".": 
+																		$ajax_var_name="class_".substr($ajax_var, strpos(trim($ajax_var), ".")+1); 
+																		break;
+																}
+																switch (substr(trim($ajax_var), 0,5))
+																{
+																	case "html.": 
+																		$ajax_var_name="html_".substr($ajax_var, strpos(trim($ajax_var), "html.")+5); 
+																		break;
+																}
+																switch (substr(trim($ajax_var), 0,4))
+																{
+																	case "dom.": 
+																		$ajax_var_name="dom_".substr($ajax_var, strpos(trim($ajax_var), "dom.")+4);
+																		break;
 																}
 																
+																if ($count_var==1)
+																{
+																	print "'$ajax_var_name='+$ajax_var_name";
+																	$count_var++;
+																}
+																else
+																{
+																	print "+'&$ajax_var_name='+$ajax_var_name";
+																}
 															}
-															
-														}
-														$send.="
-															$.ajax({
-																type: \"$method\",
-																url: \"$root/$value\",
-																data: ";
-																$count_var=1;
-																foreach ($_SESSION["data_list"] as $ajax_var)
-																{
-																	$ajax_var_name= str_replace("HTML:", "",str_replace(".", "class_", str_replace("#", "id_", $ajax_var)));
-																	if($ajax_var=="this"){
-																		if ($count_var==1)
-																		{
-																			$send.="'this_".substr($t, 2, strlen($t)-3)."='+this_".substr($t, 2, strlen($t)-3);
-																			$count_var++;
-																		}
-																		else
-																		{
-																			$send.="+'&$ajax_var_name='+$ajax_var_name";
-																		}
-																	}
-																	else
-																	{
-																		if ($count_var==1)
-																		{
-																			$send.="'$ajax_var_name='+$ajax_var_name";
-																			$count_var++;
-																		}
-																		else
-																		{
-																			$send.="+'&$ajax_var_name='+$ajax_var_name";
-																		}
-																	}
-																}
-																$send.=",
-																success: function(data)
-																{
-																	$do
-																}
-															});
+															print ",
+															success: function(data)
+															{
+																$do
+															}
 														});
-														});
-													</script>
-													";
-											break;
-											case "animate": 
-												if ($time=="default")
+														";
+												break;
+												case "animate": 
+													if ($time=="default")
+													{
+														$time=2000;
+													}
+													$not_accepted_css=array("\n","\t");
+													$accepted_css=array("<",">");
+													$value=str_replace($accepted_css,"\"",str_replace($not_accepted_css, "", $value));
+													print "
+															$($t).animate({$do},$time);";
+													break;
+												default :
+													print "$do";
+													break;
+											}
+											if($index!="inline")
+											{
+												print "});";
+												
+												if(isset($time))
+												if($time!="none")
 												{
-													$time=2000;
+													print "}, $time);";
 												}
-												$not_accepted_css=array("\n","\t");
-												$accepted_css=array("<",">");
-												$value=str_replace($accepted_css,"\"",str_replace($not_accepted_css, "", $value));
-												$send="
-													<script type=\"text/javascript\">
-														$($t).$on_event(function(){
-															$(\"$value\").animate({".$do."},".$time.");
-														});
-													</script>";
-												break;
-											default :
-												$send="
-													<script type=\"text/javascript\">
-														$($t).$on_event(function(){
-															$(\"$value\").$tag($do);
-														});
-													</script>";
-												break;
+												
+												print "});";
+											}
+											print "</script>";
+										}else
+										{
+											print("<p color=#f45>Invalid target at index <b>$line</b>.</p>");
 										}
 										break;
 										
@@ -798,6 +795,14 @@ class PHJ
 												break;
 											case "\\n":
 												$send=str_replace("\n", "<br />", $value);
+												break;
+											case "reclink\\n":
+											case "relink\\n":
+											case "recognizelink\\n":
+											case "\\nreclink":
+											case "\\nrelink":
+											case "\\nrecognizelink":
+												$send=str_replace("\n", "<br />", recognizeLink($value));
 												break;
 											case "style":
 												$value=str_replace("!", ";", $value);
@@ -920,7 +925,7 @@ class PHJ
 									case "phj":
 										switch ($tag)
 										{
-											case "use_list":
+											case "uselist":
 												$phj_script=scandir($value);
 												foreach ($phj_script as $phj_script_read)
 												{
@@ -939,7 +944,7 @@ class PHJ
 												}
 												break;
 											
-											case "use_file":
+											case "usefile":
 												if(!file_exists("$value"))
 												{
 													print "<font color='#d30'>The specified <b>file</b> does not exist.</font>";
@@ -1028,7 +1033,7 @@ class PHJ
 													{
 														$article_video_list=null;
 													}
-													$send="<p align='center'><iframe width=\"$width\" height=\"$height\" id='$id' class='$class' src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent' frameborder='0' allowfullscreen></iframe></p>";
+													$send="<iframe $custom width=\"$width\" height=\"$height\" id='$id' title='$title' align='$align' class='$class' src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent' frameborder='0' allowfullscreen></iframe>";
 												}
 												/*/////////////////////////////YouTube/////////////////////////////////////////////*/
 												break;
@@ -1043,9 +1048,10 @@ class PHJ
 										}
 										break;
 									case "a":
-											$send="<a title='$title' id='$id' class='$class' target='$t' href='$root/$value'>$tag</a>";
+											$send="<a $custom title='$title' id='$id' class='$class' href='$value'>$tag</a>";
 										break;
 									case "VAR":
+									case "var":
 										switch ($tag)
 										{
 											case "clean":
@@ -1130,14 +1136,14 @@ class PHJ
 													}
 													
 												}
-												elseif(!isset($_GET["$name"]))
+												/*elseif(!isset($_GET["$name"]))
 												{
 													require "$value/".$or.".php";
 													
 													$controller=new $or;
 													
 													print_r($url);
-												}
+												}*/
 	
 												break;
 											case "src_php":
