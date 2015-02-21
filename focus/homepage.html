@@ -1,0 +1,22 @@
+onchange:ajax("noaffiliation/scripts/ajax/homepage/homepage_notice.php")target[".order_by"]data["dom.this"]method["POST"]do[
+	$("#homepage_notice_ajax").fadeOut(0);\s
+	$("#homepage_notice_ajax").fadeIn(500);\s
+	$("#homepage_notice_ajax").html(data);\s
+];
+<div id='big_wrapper'>;
+	@:span("Order by 
+		<select class='order_by'>
+			<option value='id_notice'>Id</option>
+			<option value='priority'>Priority</option>
+			<option value='publish_date'>Date</option>
+		</select><br />").["order_of_list"];
+	<span id='homepage_notice_ajax'>;
+		php:homepage_notice();\s;
+	</span>;
+	@:span("Order by 
+		<select class='order_by'>
+			<option value='id_notice'>Id</option>
+			<option value='priority'>Priority</option>
+			<option value='publish_date'>Date</option>
+		</select><br />").["order_of_list"];
+</div>; \s
