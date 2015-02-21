@@ -3,7 +3,7 @@
 +----------------------------+
 + STRUCTURE OF A PHJ COMMAND +
 +----------------------------+
-index:tag("Arguments(n)")edit_elemtns;
+index:tag("Arguments(n)")edit_elements;
 
 Four parts:
 1)The index, indicates the main function.
