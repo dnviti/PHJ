@@ -1,0 +1,22 @@
+onchange:ajax("noaffiliation/scripts/ajax/articles/articles_list.php")target[".order_by"]data["dom.this"]method["POST"]do[
+	$("#articles_list_ajax").fadeOut(0);\s
+	$("#articles_list_ajax").fadeIn(500);\s
+	$("#articles_list_ajax").html(data);\s
+];
+<div id='big_wrapper'>;
+	@:span("Order by 
+		<select class='order_by'>
+			<option value='id_art'>Id</option>
+			<option value='main_char'>Main charater</option>
+			<option value='publish_date'>Date</option>
+		</select>").["order_of_list"]; \n;
+	<span id='articles_list_ajax'>;
+		php:articles();\s;
+	</span>;
+	@:span("Order by 
+		<select class='order_by'>
+			<option value='id_art'>Id</option>
+			<option value='main_char'>Main charater</option>
+			<option value='publish_date'>Date</option>
+		</select>").["order_of_list"];
+</div>;
