@@ -26,7 +26,7 @@ ANALYSIS:
 index=@;
 tag=p;
 Arguments(1)=This is my article
-edit elements: #["My_article"]
+edit elements(1): #["My_article"]
 */
 
 php:function("function_name()");
