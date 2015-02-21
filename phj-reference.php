@@ -163,7 +163,7 @@ target: element that will be targeted by the specified event.
 			target[".my_class"]
 		3)By its name as an element through the Element Objects Reference (EO Reference)
 			e.g.
-			target["article"]
+			target["html.article"]
 		4)By its name as en element through the Document Object Model Reference (DOM Reference)
 			e.g.
 			target["dom.document"]
