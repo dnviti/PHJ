@@ -580,35 +580,41 @@ class PHJ
 									case "onmouseout":
 									case "onkeypress":
 									case "onscroll":
-										if(substr(trim($t), 0,1)=="#" || 
-											substr(trim($t), 0,1)=="." || 
-											substr(trim($t), 0,4)=="dom." ||
-											substr(trim($t), 0,5)=="html.")
-										{
 											$on_event=substr($index, 2, strlen($index)-2);
-											switch (substr(trim($t), 0,4))
+											if($index!="inline")
+											if(substr(trim($t), 0,1)=="#" || 
+												substr(trim($t), 0,1)=="." || 
+												substr(trim($t), 0,4)=="dom." ||
+												substr(trim($t), 0,5)=="html."
+												) 
 											{
-												case "dom.": $t=substr($t, strpos($t, "dom.")+4); break;
-												default:
-													$t="\"$t\"";
-													break;
+												switch (substr(trim($t), 0,4))
+												{
+													case "dom.": $t=substr($t, strpos($t, "dom.")+4); break;
+													default:
+														$t="\"$t\"";
+														break;
+												}
+												switch (substr(trim($t), 0,4))
+												{
+													case "html.": 
+														$t="\"".substr($t, strpos($t, "html.")+5)."\"";
+														break;
+												}
+												switch (substr(trim($t), 0,1))
+												{
+													case ".": 
+														$t="\"".substr($t, strpos($t, ".")+1)."\"";
+														break;
+													case "#": 
+														$t="\"".substr($t, strpos($t, "#")+1)."\"";
+														break;
+												}
 											}
-											switch (substr(trim($t), 0,4))
+											else
 											{
-												case "html.": 
-													$t="\"".substr($t, strpos($t, "html.")+5)."\"";
-													break;
+												print("<p color=#f45>Invalid target at index <b>$line_number</b>.Content: <b>\"$content\"</b> in $file</p>");
 											}
-											switch (substr(trim($t), 0,1))
-											{
-												case ".": 
-													$t="\"".substr($t, strpos($t, ".")+1)."\"";
-													break;
-												case "#": 
-													$t="\"".substr($t, strpos($t, "#")+1)."\"";
-													break;
-											}
-											
 											print "<script type=\"text/javascript\">";
 											
 											if($index!="inline")
@@ -757,40 +763,34 @@ class PHJ
 												print "});";
 											}
 											print "</script>";
-										}else
-										{
-											print("<p color=#f45>Invalid target at index <b>$line</b>.</p>");
-										}
+										
 										break;
 										
 									case "@":
 										switch ($tag)
 										{
-											case "script":
-												$send="<script type='text/javascript'>$do</script>";
-												break;
 											case "reclink":
 											case "relink":
 											case "recognizelink":
-												$send=recognizeLink($value);
+												print recognizeLink($value);
 												break;
 											case "prettify":
 													$value=recognizeLink(htmlspecialchars(file_get_contents($value)));
-													$send="<pre title='$title' align='$align' name='$name'";
+													print "<pre title='$title' align='$align' name='$name'";
 													if(isset($id))
 													{
-														$send.=" id='$id' ";
+														print " id='$id' ";
 													}
 													else
 													{
-														$send.=" id='quine' ";
+														print " id='quine' ";
 													}
 													if (isset($class)) {
-														$send.=" class='prettyprint linenums $class' ";
+														print " class='prettyprint linenums $class' ";
 													}
 													else
 													{
-														$send.=" class='prettyprint linenums' ";
+														print " class='prettyprint linenums' ";
 													}
 													
 													$send.=">$value</pre>";
@@ -804,14 +804,14 @@ class PHJ
 											case "\\nreclink":
 											case "\\nrelink":
 											case "\\nrecognizelink":
-												$send=str_replace("\n", "<br />", recognizeLink($value));
+												print str_replace("\n", "<br />", recognizeLink($value));
 												break;
 											case "style":
 												$value=str_replace("!", ";", $value);
-												$send="<style $custom>$value</style>";
+												print "<style $custom>$value</style>";
 												break;
 											case "script":
-													$send="<script type='text/javascript' $custom>$value</script>";
+													print "<script type='text/javascript' $custom>$value</script>";
 												break;
 											case "[button]":
 													if(isset($inside))
@@ -822,16 +822,16 @@ class PHJ
 													{
 														$button_url="$value";
 													}
-													$send="
+													print "
 													<input onclick='window.location.replace(\"$button_url\")' title='$title' align='$align' target='$t' id='$id' class='$class' name='$name' type='button' value='$value' $custom />
 													
 													";
 												break;
 											case "":
-												$send=$value;
+												print $value;
 												break;
 											default:
-												$send="<$tag title='$title' align='$align' editable='$editable' id='$id' class='$class' name='$name' $custom>$value</$tag>";
+												print "<$tag title='$title' align='$align' editable='$editable' id='$id' class='$class' name='$name' $custom>$value</$tag>";
 												break;
 											
 										}
@@ -1169,7 +1169,7 @@ class PHJ
 									 */
 								}
 						
-							}else{echo"<br /><font color=\"#d30\">PHJ error: specify an object type.PHJ stopped at <b><u>index $line_number</u></b> \"$content\" in $file</font><br />";}
+							}else{echo"<br /><font color=\"#d30\">PHJ error: specify an object type.PHJ stopped at <b><u>index $line_number</u></b> <b>\"$content\"</b> in $file</font><br />";}
 				
 						}else{echo"<br /><font color=\"#d30\">PHJ error: complete your object.PHJ stopped at <b><u>index $line_number</u></b> \"$content\" in $file</font><br />";}
 
