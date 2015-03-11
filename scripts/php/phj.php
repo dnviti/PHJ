@@ -156,6 +156,7 @@ class PHJ
 								
 								$attributes=array(
 										"HTML:HTML",
+										"tooltip:tooltip",
 										"as:as",
 										"data_alias:data_alias",
 										"align:align",
@@ -314,19 +315,19 @@ class PHJ
 													case "enable":
 														print"<script type=\"text/javascript\">
 																$(document).on('mousemove', function(e){
-														    $('#tooltip').css({
-														        left:  e.pageX+15,
-														        top:   e.pageY+30
-														     });
-														    $(\".tooltip\").mouseover(function(){
-														    	var tooltip=$(this).attr(\"tooltip\");
-														    	$(\"#tooltip\").fadeIn(0).html(tooltip);
-														    });
-														    $(\".tooltip\").mouseout(function(){
-														    	$(\"#tooltip\").fadeOut(0);
-														    });
-														 });
-														</script>
+															    $('#tooltip').css({
+															        left:  e.pageX,
+															        top:   e.pageY+10
+															     });
+															    $(\".tooltip\").mouseover(function(){
+															    	var tooltip=$(this).attr(\"tooltip\");
+															    	$(\"#tooltip\").fadeIn(0).html(tooltip);
+															    });
+															    $(\".tooltip\").mouseout(function(){
+															    	$(\"#tooltip\").fadeOut(0);
+															    });
+															 });
+															</script>
 														".phj("@:div(\"\")#[\"tooltip\"];");
 														break;
 												}
@@ -776,7 +777,7 @@ class PHJ
 												break;
 											case "prettify":
 													$value=recognizeLink(htmlspecialchars(file_get_contents($value)));
-													print "<pre title='$title' align='$align' name='$name'";
+													print "<pre tooltip='$tooltip' title='$title' align='$align' name='$name' $custom";
 													if(isset($id))
 													{
 														print " id='$id' ";
@@ -823,7 +824,7 @@ class PHJ
 														$button_url="$value";
 													}
 													print "
-													<input onclick='window.location.replace(\"$button_url\")' title='$title' align='$align' target='$t' id='$id' class='$class' name='$name' type='button' value='$value' $custom />
+													<input onclick='window.location.replace(\"$button_url\")' tooltip='$tooltip' title='$title' align='$align' target='$t' id='$id' class='$class' name='$name' type='button' value='$value' $custom />
 													
 													";
 												break;
@@ -831,7 +832,7 @@ class PHJ
 												print $value;
 												break;
 											default:
-												print "<$tag title='$title' align='$align' editable='$editable' id='$id' class='$class' name='$name' $custom>$value</$tag>";
+												print "<$tag tooltip='$tooltip' title='$title' align='$align' editable='$editable' id='$id' class='$class' name='$name' $custom>$value</$tag>";
 												break;
 											
 										}
@@ -844,7 +845,7 @@ class PHJ
 											case "pay-pal":
 												
 												$send="
-														<form method=\"$method\" name=\"$name\" action=\"$value\" $custom>
+														<form tooltip='$tooltip' method=\"$method\" name=\"$name\" action=\"$value\" $custom>
 															<input type=\"hidden\" name=\"business\" value=\"$vendor\" />
 															<input type=\"hidden\" name=\"cmd\" value=\"$cmd\" />
 															<input type=\"hidden\" name=\"upload\" value=\"$upload\">
@@ -876,28 +877,28 @@ class PHJ
 												break;
 											case "txt":
 											case "text":
-												$send="<input $custom title='$title' maxlength='$max' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML' />";
+												$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML' />";
 												break;
 											case "voice":
-												$send="<input $custom type=\"text\" speech>";
+												$send="<input tooltip='$tooltip' minlength='$min' maxlength='$max' $custom type=\"text\" speech>";
 												break;
 											case "pass":
 											case "password":
-												$send="<input $custom title='$title' maxlength='$max' id='$id' class='$class' type='password' name='$name' placeholder='$value' value='$HTML' />";
+												$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' type='password' name='$name' placeholder='$value' value='$HTML' />";
 												break;
 											case "mail":
 											case "email":
-												$send="<input $custom title='$title' maxlength='$max' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
+												$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
 												break;
 											case "txtarea":
 											case "textarea":
-												$send="<textarea $custom title='$title' maxlength='$max' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
+												$send="<textarea tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
 												break;
 											case "option":
-												$send="<option $custom id='$id' class='$class' value='$value_item'>$value</option>";
+												$send="<option tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' value='$value_item'>$value</option>";
 											break;
 											default:
-												$send="<input $custom title='$title' id='$id' class='$class' type='$tag' name='$name' value='$value' />";
+												$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' type='$tag' name='$name' value='$value' />";
 												break;
 											
 										}
@@ -906,21 +907,21 @@ class PHJ
 											switch ($tag)
 											{
 												case "txt":
-													$send="<input $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
+													$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
 													break;
 												case "pass":
-													$send="<input $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
+													$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
 													break;
 												case "mail":
 												case "email":
-													$send="<input $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
+													$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
 													break;
 												case "txtarea":
 												case "textarea":
-													$send="<textarea $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
+													$send="<textarea tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
 													break;
 												default:
-													$send="<input $custom title='$title' required='required' id='$id' class='$class' type='$tag' name='$name' placeholder='$value' />";
+													$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='$tag' name='$name' placeholder='$value' />";
 													break;
 											}
 											break;
@@ -980,21 +981,21 @@ class PHJ
 												
 											case "img":
 											case "image":
-												$send="<img title='$title' align='$align' id=\"$id\" class=\"$class\" src=\"$root/$value\" width=\"$width\" height=\"$height\" />";
+												$send="<img tooltip='$tooltip' $custom title='$title' align='$align' id=\"$id\" class=\"$class\" src=\"$root/$value\" width=\"$width\" height=\"$height\" />";
 												break;
 												
 											case "video":
 												$skinned_name=str_replace(substr($value, strpos($value, "."),strlen($value)-strpos($value, ".")), "", $value);
 												
 												$send="
-													<video $loop $muted title='$title' id=\"$id\" class='$class' $controls width='$width' height='$height' $custom >
+													<video tooltip='$tooltip' $loop $muted title='$title' id=\"$id\" class='$class' $controls width='$width' height='$height' $custom >
 														<source src=\"$root/$value\" type=\"video/mp4\">
 														$or
 													</video>";
 												break;
 											case "audio":
 												$send="
-												<audio title='$title' id=\"$id\" class='$class' controls>
+												<audio tooltip='$tooltip' $custom title='$title' id=\"$id\" class='$class' controls>
 													<source src='$root/$value' type='audio/mpeg'>
 													$or
 												</audio>";
@@ -1035,7 +1036,7 @@ class PHJ
 													{
 														$article_video_list=null;
 													}
-													$send="<iframe $custom width=\"$width\" height=\"$height\" id='$id' title='$title' align='$align' class='$class' src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent' frameborder='0' allowfullscreen></iframe>";
+													$send="<iframe tooltip='$tooltip' $custom width=\"$width\" height=\"$height\" id='$id' title='$title' align='$align' class='$class' src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent' frameborder='0' allowfullscreen></iframe>";
 												}
 												/*/////////////////////////////YouTube/////////////////////////////////////////////*/
 												break;
@@ -1050,7 +1051,7 @@ class PHJ
 										}
 										break;
 									case "a":
-											$send="<a $custom title='$title' id='$id' class='$class' href='$value'>$tag</a>";
+											$send="<a tooltip='$tooltip' $custom title='$title' id='$id' class='$class' href='$value'>$tag</a>";
 										break;
 									case "VAR":
 									case "var":
