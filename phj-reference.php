@@ -3,7 +3,7 @@
 +----------------------------+
 + STRUCTURE OF A PHJ COMMAND +
 +----------------------------+
-index:tag("Arguments(n)")edit_elements;
+index.tag("Arguments(n)")edit_elements;
 
 Four parts:
 1)The index, indicates the main function.
@@ -13,38 +13,42 @@ Four parts:
 	NOTE: the correct syntax requires you to write the double quotes 
 	right after the parenthesis when starting the Arguments list or 
 	right before the parenthesis when ending the Arguments list.
-<!!!		So this is not allowed: index:tag( "" )edit_elements;			!!!!!!!!!>
+<!!!		So this is not allowed: index.tag( "" )edit_elements;			!!!!!!!!!>
 4) The edit elements, is a list of different attributes which 
 	serves the index and the tag to accomplish their functionality or 
 	sometimes improve them.
-+----------------------------+
-+ ANALYSIS OF THE COMMAND    +
-+----------------------------+
+NOTE: the command ends as soon as the parser encounters the ";" (semicolon) character,
+		so remember that you have to escape the semicolon using the "\" (backslash) before
+		the semicolon or after.
++-------------------------------------+
++ EXAMPLE AND ANALYSIS OF THE COMMAND +
++-------------------------------------+
 e.g:
-@:p("This is my article...")#["My_article"];
+@.p("This is my article\;")#["My_article"];
 ANALYSIS:
 index=@;
 tag=p;
-Arguments(1)=This is my article
-edit elements(1): id="My_article"
+Arguments(1)=This is my article\;
+edit elements(1)={id="My_article"}
+result="<p>This is my article;</p>"
 */
 
-php:function("function_name()");
+php.function("function_name()");
 or
-php:go("function_name()");
+php.go("function_name()");
 /*Calls php function.
 Arguments(1): Name of the php function
 ***********************************************************************/
 
 
-view:data("variable_name")method["GET/POST"]as["My name is $_PHJ_DATA"];
+view.data("variable_name")method["variable_type_GET_or_POST"]as["My name is $_PHJ_DATA"];
 /*Stores php variable for printing.
 Arguments(1): Name of the php variable,
 method: method of the variable, it can be a GET method or a POST method.
 ***********************************************************************/
 
 
-set:data("variable_value")method["variable_type"]name["variable_name"];
+set.data("variable_value")method["variable_type_GET_or_POST"]name["variable_name"];
 /*Sets a php $_POST variable (array) or a $_GET variable(array).
 Arguments(1): value of your variable,
 method: method of your variable,
@@ -52,22 +56,21 @@ name: name of your variable.
 **********************************************************************/
 
 
-sql:query("temp_var_name")do[sql_command];
+sql.query("temp_var_name")do[sql_command];
 /*Stores the result of a sql command inside a $_SESSION variable.
 Arguments(1): name of the session variable,
 do: your full sql command.
 *********************************************************************/
 
 
-harvest:directory("controllers_path")name["url_variable_name"];
+harvest.directory("controllers_path")name["url_variable_name"];
 /*Enables the Model View Controller (MVC) pattern.
 Arguments(1): path of your php controller files starting from 
 				the current directory.
 				Controllers are php files with a specific name.
 				The controller's name must be the same as it's 
 				class(it must contain one class, no more and no 
-				less).The class usually uses a first __construct()
-				function inside which data is managed.
+				less).The class has to be constructed with __construct().
 			,
 name: name of your url variable.You defined this inside 
 		your .htaccess file.If you followed the default pattern
@@ -75,19 +78,19 @@ name: name of your url variable.You defined this inside
 *********************************************************************/
 
 
-js:uselist("js_directory_path");
+js.uselist("js_directory_path");
 /*Includes every javascript file that is located inside the specified directory.
 Arguments(1): path of your javascript files' folder.
 ********************************************************************/
 
 
-js:usefile("js_file_path");
+js.usefile("js_file_path");
 /*Includes the specified javascript.
 Arguments(1): path of the javascript file.
 ********************************************************************/
 
 
-css:("")do[css_code];
+css.("")do[css_code];
 /*Returns css code.
 Arguments(0),
 do: css code that will be evaluated.PHJ requires you to end your
@@ -105,13 +108,13 @@ do: css code that will be evaluated.PHJ requires you to end your
 ********************************************************************/
 
 
-css:uselist("css_directory_path");
+css.uselist("css_directory_path");
 /*Includes every css file that is located inside the specified directory.
 Arguments(1): path of your css files' folder.
 *******************************************************************/
 
 
-css:usefile("css_file_path");
+css.usefile("css_file_path");
 /*Includes the specified css.
 Arguments(1): path of the css file.
 ********************************************************************/
@@ -143,7 +146,7 @@ Arguments(1): path of the css file.
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 
-event:js("")target["element_targeted_by_event"]do[js_code];
+event.js("")target["element_targeted_by_event"]do[js_code];
 /*Returns javascript code upon event.
 Index: this is the event on which the command will react.
 		"inline" event means no event at all.
@@ -196,7 +199,7 @@ do: your javascript code.Remember that "do" does not allow
 ******************************************************************/
 
 
-event:load("source_to_load")target["element_targeted_by_event"]to["element_targeted_by_load"]time["repeating_time"];
+event.load("source_to_load")target["element_targeted_by_event"]to["element_targeted_by_load"]time["repeating_time"];
 /*Loads the specified Argument(1) data inside "to" when "target" makes "event" true.
 	If the specified Argument(1) is a valid source, that
 	data will be loaded inside "to".
@@ -227,7 +230,7 @@ time: how long it will take the command to repeat itself in milliseconds (ms).
 *****************************************************************/
 
 
-event:ajax("source_to_load")target["element_targeted-by-event"]data["data_set_to_source"]method["GET/POST"]do[javascript code (if successful)];
+event.ajax("source_to_load")target["element_targeted-by-event"]data["data_set_to_source"]method["GET/POST"]do[javascript code (if successful)];
 /*sends "data" to Argument(1) php file when "target" makes "event" true, 
 and returns javascript code through "do" if the "event" is successful.
 Index: this is the event on which the command will react.
@@ -289,7 +292,7 @@ method: http method.GET or POST method.This will decide how the
 ****************************************************************/
 
 
-@:("value");
+@.("value");
 /*Returns Argument(1) as plain text.
 Argument(1): text that will return.
 				Notice that the characters "")" should
@@ -301,7 +304,7 @@ Argument(1): text that will return.
 ****************************************************************/
 
 
-@:\n("value");
+@.\n("value");
 /*Returns Argument(1) as plain text and recognizes the "new line" character.
 Argument(1): text that will return.
 				Notice that the characters "")" should
@@ -313,7 +316,7 @@ Argument(1): text that will return.
 ****************************************************************/
 
 
-@:reclink("value");
+@.reclink("value");
 /*Returns Argument(1) as plain text and recognizes URLs as links.
 Argument(1): text that will return.
 				Notice that the characters "")" should
@@ -325,7 +328,7 @@ Argument(1): text that will return.
 ****************************************************************/
 
 
-@:reclink\n("value");
+@.reclink\n("value");
 /*Returns Argument(1) as plain text and recognizes URLs as links and
 the "new line" character.
 Argument(1): text that will return.
@@ -339,7 +342,7 @@ Argument(1): text that will return.
 
 
 
-@:[button]("value")inside["url"]custom["custom_html_attributes='value'"]name["name"].["class"]#["id"];
+@.[button]("value")inside["url"]custom["custom_html_attributes='value'"]name["name"].["class"]#["id"];
 /*Returns a phj dynamic button redirects the user to "inside" url once it's clicked.
 Argument(1): Visible value of the button (placeholder),
 inside: destination URL of the button.
@@ -374,7 +377,7 @@ included in the project.
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 
->:dynamic_input_tag("initial_visible_value")value["initial_value"]custom["custom_html_attributes='value'"]max["max_length"]name["name"].["class"]#["id"];
+>.dynamic_input_tag("initial_visible_value")value["initial_value"]custom["custom_html_attributes='value'"]max["max_length"]name["name"].["class"]#["id"];
 /*Returns a phj dynamic input field.
 Argument(1): visible value of the input field (placeholder),
 value: the actual value of the input field,
@@ -387,7 +390,7 @@ name: name of button,
 ***************************************************************/
 
 
->>:dynamic_input_tag("initial_visible_value")value["initial_value"]custom["custom_html_attributes='value'"]max["max_length"]name["name"]title["html_title"].["class"]#["id"];
+>>.dynamic_input_tag("initial_visible_value")value["initial_value"]custom["custom_html_attributes='value'"]min["min_length"]max["max_length"]name["name"]title["html_title"].["class"]#["id"];
 /*Returns a phj dynamic input field.
 +---------------------------------------------------------------+
 + NOTE: unlike the previews ">:dynamic_input_tag("");" command, +
@@ -397,6 +400,7 @@ Argument(1): visible value of the input field (placeholder),
 value: the actual value of the input field,
 custom: custom attributes for the button.
 		e.g: custom["align='left' style='color:#f45'"],
+min: minimum length of the field's "value" (not Argument(1)),
 max: maximum length of the field's "value" (not Argument(1)),
 name: name of button,
 title: title of the element (usually visible on mouseover),
@@ -405,19 +409,19 @@ title: title of the element (usually visible on mouseover),
 ***************************************************************/
 
 
-phj:uselist("phj_directory_path");
+phj.uselist("phj_directory_path");
 /*Includes every phj file that is located inside the specified directory.
 Arguments(1): path of your phj files' folder.
 *******************************************************************/
 
 
-phj:usefile("phj_file_path");
+phj.usefile("phj_file_path");
 /*Includes the specified phj.
 Arguments(1): path of the phj file.
 ********************************************************************/
 
 
-src:img("")custom["custom_html_attributes='value'"]name["name"]title["html_title"].["class"]#["id"];
+src.img("")custom["custom_html_attributes='value'"]name["name"]title["html_title"].["class"]#["id"];
 /*Returns an image.
 Argument(1): URL of the image,
 custom: custom attributes for the button.
@@ -429,32 +433,32 @@ title: title of the element (usually visible on mouseover),
 ********************************************************************/
 
 
-src:php("php_file_path");
+src.php("php_file_path");
 /*Calls php file.
 Argument(1): path of the php file.
 ********************************************************************/
 
 
-src:phj("phj_file_path");
+src.phj("phj_file_path");
 /*Calls phj file.Same as phj:usefile("").
 Argument(1): path of the phj file.
 ********************************************************************/
 
 
-src:mirror("source_path");
+src.mirror("source_path");
 /*Returns the content of ANY source (External HTML content included).
 Argument(1): path of the external/local source.
 ********************************************************************/
 
 
-src:file("file_path");
+src.file("file_path");
 /*Returns the content of a file located inside your root.
 Argument(1): path of the file (starting from your root project).
 			*Check your project's main php file to find your root project easily.
 ********************************************************************/
 
 
-src:youtube("video_url")width["width_of_frame"]height["height_of_frame"]custom["custom_html_attributes='value'"]name["name"]title["html_title"].["class"]#["id"];
+src.youtube("video_url")width["width_of_frame"]height["height_of_frame"]custom["custom_html_attributes='value'"]name["name"]title["html_title"].["class"]#["id"];
 /*Returns iframe of the specified youtube video or youtube list of videos.
 Argument(1): URL of the youtube video or list of videos,
 custom: custom attributes for the button.
@@ -466,7 +470,7 @@ title: title of the element (usually visible on mouseover),
 ********************************************************************/
 
 
-a:html_content("")custom["custom_html_attributes='value'"]name["name"]title["html_title"].["class"]#["id"];
+a.html_content("")custom["custom_html_attributes='value'"]name["name"]title["html_title"].["class"]#["id"];
 /*Returns a html anchor using the phj tag as its content.
 tag: content that will be subject to the anchor (HTML allowed),
 custom: custom attributes for the button.
@@ -478,7 +482,7 @@ title: title of the element (usually visible on mouseover),
 ********************************************************************/
 
 
-tool:tip("on/enable");
+tool.tip("on/enable");
 /*Enables tool tip for your project.
 Argument(1): enables tool tip.Two possible vcalues: "on" or "enable".
 NOTE: id #tooltip is reserved for the tool tip.
