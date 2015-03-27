@@ -6,10 +6,7 @@
 * @version 1.30 Official 07/02/2015
 */
 header('Content-Type: text/html; charset=utf-8');
-if(!isset($_GET["focus"]))
-{
-    $_GET["focus"]="home";
-}
+
 function phj($value)
 {
 	$configs=array();
@@ -76,11 +73,12 @@ class PHJ
 		}
 			$code_type="phj";
 			
-			$array = preg_split('/;\s+(?!\s+)/', $my_file);
+			$array = preg_split('/(?<!\\\\);\s+(?!\s+)/', $my_file);
 			$line_number=1;
 			foreach ($array as $content)
 			{
-				$content=str_replace("\t", "", $content);
+				$break=array("\\s","\\");
+				$content=str_replace($break, "", $content);
 				
 				if ($content==">") {
 					print "<br />";
@@ -108,13 +106,17 @@ class PHJ
 							break;
 					}
 				}
-				elseif( substr($content,0,1)=="!")
+				elseif(substr($content,0,1)=="!")
 				{
 					print "</".substr($content,1).">";
 				}
 				elseif( substr($content,0,1)==":")
 				{
 					print "<!-- ".substr($content,1)." -->";
+				}
+				elseif( substr($content,0,1)=="&")
+				{
+					print "&".substr($content, 1).";";
 				}
 				elseif(substr($content,0,1)=="<")
 				{
@@ -140,7 +142,7 @@ class PHJ
 				}
 				elseif(strlen($content)>2)
 				{
-					$index=substr($content,0,strpos(substr($content, 0, strpos($content, "(\"")), ":"));
+					$index=substr($content,0,strpos(substr($content, 0, strpos($content, "(\"")), "."));
 					$indexPos=strpos($content,$index);
 					
 					$ss=strpos($content,"(\"")+2;
@@ -176,11 +178,13 @@ class PHJ
 										"name:name",
 										"wait:wait",
 										"time:time",
+										"else:else",
 										"target:t",
 										"#:id",
 										".:class",
 										"value:value_item",
 										"to:to",
+										"except:except",
 										"subject:subject",
 										"paypal_form:paypal_form",
 										"vendor:vendor",
@@ -289,6 +293,15 @@ class PHJ
 									$do_length=strpos(substr($content, $es+$do_start), "]");
 								
 									$do=preg_replace('/!\s+(?=\S*)/', ";",str_replace($clean_e=array("[","]"), "", substr($content, $es+$do_start+2, $do_length-1)));
+									
+									/*$do=preg_replace('//', $replacement, $subject);
+									preg_grep($pattern, $input);***
+									*******************
+									*************
+									**
+									***
+									**
+									*/
 								}
 								else
 								{
@@ -298,13 +311,12 @@ class PHJ
 								
 								/*///////////////////////////////////////////////////////////*/
 								
-								$break=array("\\n",">\\");
-								$value=str_replace($break, "<br />", substr($content,$ss,$es-$ss));
+								
+								$value=str_replace("\\n", "<br />", substr($content,$ss,$es-$ss));
 								
 								$tag=substr($content, $indexPos+strlen($index)+1, $ss-(strlen($index)+2)-1);
-								$index=str_replace("\s","",$index);
-								$value=str_replace("\s","",$value);
-								$do=str_replace("\s","",$do);
+								
+								
 								switch ($index)
 								{
 									case "tool":
@@ -314,21 +326,22 @@ class PHJ
 													case "on":
 													case "enable":
 														print"<script type=\"text/javascript\">
-																$(document).on('mousemove', function(e){
-															    $('#tooltip').css({
-															        left:  e.pageX,
+																$(document).on(\"mousemove\", function(e){
+																
+															    $(\"#tooltip\").css({
+															        left:  e.pageX+20,
 															        top:   e.pageY+10
 															     });
-															    $(\".tooltip\").mouseover(function(){
+															    $(\".tooltip\").on(\"mouseover\",function(){
 															    	var tooltip=$(this).attr(\"tooltip\");
 															    	$(\"#tooltip\").fadeIn(0).html(tooltip);
 															    });
-															    $(\".tooltip\").mouseout(function(){
+															    $(\".tooltip\").on(\"mouseout\",function(){
 															    	$(\"#tooltip\").fadeOut(0);
 															    });
 															 });
 															</script>
-														".phj("@:div(\"\")#[\"tooltip\"];");
+														".phj("@.div(\"\")#[\"tooltip\"];");
 														break;
 												}
 												break;
@@ -342,7 +355,6 @@ class PHJ
 										switch($tag)
 										{
 											case "send":
-												$send=null;
 												if(isset($_POST["$t"]))
 												{
 													if(substr($to,0,7)=="string:")
@@ -361,9 +373,9 @@ class PHJ
 														{$email_from      = $from;}
 													else{$email_from      = $_POST["$from"];}
 													
-														$email_headers = 'From: '.$email_from . "\r\n" .
-															'Reply-To: '.$email_from . "\r\n" .
-															'X-Mailer: PHP/' . phpversion();
+														$email_headers = "From: ".$email_from . "\r\n" .
+															"Reply-To: ".$email_from . "\r\n" .
+															"X-Mailer: PHP/" . phpversion();
 													
 													$email_to		=str_replace(array("\n"," ","\t"),"",$email_to);
 													$email_subject	=str_replace(array("\n"," ","\t"),"",$email_subject);
@@ -373,11 +385,11 @@ class PHJ
 													
 													if($send_email)
 													{
-														$send=$do;
+														print $do;
 													}
 													else
 													{
-														$send=$do;
+														print $do;
 													}
 												}
 												break;
@@ -387,7 +399,7 @@ class PHJ
 										switch ($tag)
 										{
 											case "function":
-													$send=eval("$value".'('.$data.');');
+													print eval("$value".'('.$data.');');
 												break;
 											case "go":
 												eval("$value");
@@ -408,7 +420,7 @@ class PHJ
 															$url=$_GET["$value"];
 															$url=rtrim($url,'/');
 															$url=end(explode("/", $url));
-															$send=str_replace('$_PHJ_DATA', $url, $as);
+															print str_replace('$_PHJ_DATA', $url, $as);
 														}
 														break;
 													case "POST":
@@ -417,7 +429,7 @@ class PHJ
 															$url=$_POST["$value"];
 															$url=rtrim($url,'/');
 															$url=explode("/", $url);
-															$send=str_replace('$_PHJ_DATA', $url, $as);
+															print str_replace('$_PHJ_DATA', $url, $as);
 														}
 														break;
 													default:
@@ -471,7 +483,7 @@ class PHJ
 												
 												if(!$send)
 												{
-													$send=mysql_error();
+													print mysql_error();
 												}
 												else
 												{
@@ -480,13 +492,97 @@ class PHJ
 												break;
 										}
 										break;
-										
+									
+									
 									case "harvest":
 										switch ($tag)
 										{
 											case "directory":
 											case "dir":
-												$send="harvest_data";
+												if(isset($_GET["$name"]))
+												{
+													$url=$_GET["$name"];
+													$url=rtrim($url,'/');
+													$url=explode("/", $url);
+													
+													if(file_exists("controllers/".$url[0].".php"))
+													{
+														if(!isset($id))
+														{
+															$id=null;
+														}
+														if(!isset($url[0]))
+														{
+															$classobject=null;
+														}
+														else
+														{
+															if($url[0]!=$except)
+															{
+																$classobject=$url[0].$id;
+																if(!file_exists("$value/$classobject.php"))
+																{
+																	
+																		$classobject=$else.$id;
+																	
+																	
+																	if(!file_exists("$value/$classobject.php"))
+																	{
+																		$classobject=null;
+																	}
+																}
+															}
+															else 
+															$classobject=null;
+														}
+													}else 
+													{
+														header("Location: error");
+													}
+												}else
+												{
+													if(!isset($id))
+													{
+														$id=null;
+													}
+													if(!isset($else))
+													{
+														$classobject=null;
+													}
+													else
+													{
+														if($else!=$except){
+															$classobject=$else.$id;
+															if(!file_exists("$value/$classobject.php"))
+															{
+																$classobject=null;
+															}
+														}
+														else
+															$classobject=null;
+													}
+												}
+												if($classobject!=$except && $classobject!="" )
+												{
+													if(file_exists("$value/".$classobject.".php"))
+													{
+														require "$value/".$classobject.".php";
+														$controller=new $classobject;
+														
+														if(isset($url[2]))
+														{
+															$controller->{$url[1]}($url[2]);
+														}
+														else
+														{
+															if(isset($url[1]))
+															{
+																$controller->{$url[1]}();
+															}
+														}
+													}
+												}
+												/*print "$value/$classobject.php-> except: $except.php-> else: $else<br />";*/
 												break;
 										}
 										break;
@@ -495,8 +591,8 @@ class PHJ
 										switch ($tag)
 										{
 											case "prettify":
-												$send="<script type='text/javascript' src='https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?autoload=true&amp'></script>";
-												$send.="
+												print "<script type='text/javascript' src='https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js?autoload=true&amp'></script>";
+												print "
 													<script>//<![CDATA[
 													(function () {
 													  function html(s) {
@@ -521,19 +617,19 @@ class PHJ
 												break;
 												
 											case "uselist":
-												$send=scandir($value);
+													listFolderFiles("$value","js","$except");
 												break;
 									
 											case "usefile":
-												$send="<script type='text/javascript' src='$root/$value' ></script>";
+												print "<script type=\"text/javascript\" src=\"$root/$value\" ></script>";
 												break;
 											case "":
-												$send="<script type='text/javascript' >
+												print "<script type=\"text/javascript\" >
 														$value
 														</script>";
 												break;
 											default:
-												$send="<script type='text/javascript' >
+												print "<script type=\"text/javascript\" >
 												$value
 												</script>";
 												break;
@@ -543,27 +639,27 @@ class PHJ
 									case "css":
 										switch ($tag)
 										{
-											
 											case "uselist":
-												$send=scandir($value);
+													listFolderFiles("$value","css","$except");
 												break;
 												
 											case "usefile":
-												$send="<link rel='stylesheet' type='text/css' href='$root/$value' />";
+												print "<link rel=\"stylesheet\" type=\"text/css\" href=\"$root/$value\" />";
 												break;
 											case "":
 												$value=preg_replace("/!\s*(?!\s+)/", ";", $do);
-												$send="<style>$do</style>";
+												print "<style>$do</style>";
 												break;
 											default:
 												$value=preg_replace("/!\s*(?!\s+)/", ";", $do);
-												$send="<style>$do</style>";
+												print "<style>$do</style>";
 												break;
 										}
 										break;
 									
-									case "inline";
-									case "onblur":
+									default:
+									case "inline":
+									/*case "onblur":
 									case "onchange":
 									case "ondblclick":
 									case "onfocus";
@@ -580,7 +676,7 @@ class PHJ
 									case "onmouseup":
 									case "onmouseout":
 									case "onkeypress":
-									case "onscroll":
+									case "onscroll":*/
 											$on_event=substr($index, 2, strlen($index)-2);
 											if($index!="inline")
 											if(substr(trim($t), 0,1)=="#" || 
@@ -589,20 +685,32 @@ class PHJ
 												substr(trim($t), 0,5)=="html."
 												) 
 											{
-												switch (substr(trim($t), 0,4))
-												{
-													case "dom.": $t=substr($t, strpos($t, "dom.")+4); break;
-													default:
+												
+												if(substr(trim($t), 0,4)=="dom.")
+													$t=substr($t, strpos($t, "dom.")+4);
+													elseif (substr(trim($t), 0,5)=="html.")
+														$t="\"".substr($t, strpos($t, "html.")+5)."\"";
+													elseif (substr(trim($t), 0,1)==".")
+														$t="\".".substr($t, strpos($t, ".")+1)."\"";
+													elseif (substr(trim($t), 0,1)=="#")
+														$t="\"#".substr($t, strpos($t, "#")+1)."\"";
+													else
 														$t="\"$t\"";
+													
+													
+												/*switch (substr(trim($t), 0,4))
+												{
+													case "dom.": 
+														$t=substr($t, strpos($t, "dom.")+4); 
 														break;
-												}
-												switch (substr(trim($t), 0,4))
+												}*/
+												/*switch (substr(trim($t), 0,5))
 												{
 													case "html.": 
 														$t="\"".substr($t, strpos($t, "html.")+5)."\"";
 														break;
-												}
-												switch (substr(trim($t), 0,1))
+												}*/
+												/*switch (substr(trim($t), 0,1))
 												{
 													case ".": 
 														$t="\"".substr($t, strpos($t, ".")+1)."\"";
@@ -610,7 +718,7 @@ class PHJ
 													case "#": 
 														$t="\"".substr($t, strpos($t, "#")+1)."\"";
 														break;
-												}
+												}*/
 											}
 											else
 											{
@@ -628,7 +736,7 @@ class PHJ
 													print "setInterval(function() {";
 												}
 												print "
-													$($t).$on_event(function(){";
+													$($t).on('$on_event',function(){";
 											}
 											switch ($tag)
 											{
@@ -691,7 +799,7 @@ class PHJ
 													print "
 														$.ajax({
 															type: \"$method\",
-															url: \"$root/$value\",
+															url: \"$value\",
 															data: ";
 															$count_var=1;
 															foreach ($_SESSION["data_list"] as $ajax_var)
@@ -747,9 +855,6 @@ class PHJ
 													print "
 															$($t).animate({$do},$time);";
 													break;
-												default :
-													print "$do";
-													break;
 											}
 											if($index!="inline")
 											{
@@ -777,27 +882,27 @@ class PHJ
 												break;
 											case "prettify":
 													$value=recognizeLink(htmlspecialchars(file_get_contents($value)));
-													print "<pre tooltip='$tooltip' title='$title' align='$align' name='$name' $custom";
+													print "<pre tooltip=\"$tooltip\" title=\"$title\" align=\"$align\" name=\"$name\" $custom";
 													if(isset($id))
 													{
-														print " id='$id' ";
+														print " id=\"$id\" ";
 													}
 													else
 													{
-														print " id='quine' ";
+														print " id=\"quine\" ";
 													}
 													if (isset($class)) {
-														print " class='prettyprint linenums $class' ";
+														print " class=\"prettyprint linenums $class\" ";
 													}
 													else
 													{
-														print " class='prettyprint linenums' ";
+														print " class=\"prettyprint linenums\" ";
 													}
 													
-													$send.=">$value</pre>";
+													print ">$value</pre>";
 												break;
 											case "\\n":
-												$send=str_replace("\n", "<br />", $value);
+												print str_replace("\n", "<br />", $value);
 												break;
 											case "reclink\\n":
 											case "relink\\n":
@@ -824,7 +929,7 @@ class PHJ
 														$button_url="$value";
 													}
 													print "
-													<input onclick='window.location.replace(\"$button_url\")' tooltip='$tooltip' title='$title' align='$align' target='$t' id='$id' class='$class' name='$name' type='button' value='$value' $custom />
+													<input onclick='window.location.replace(\"$button_url\")' tooltip=\"$tooltip\" title=\"$title\" align=\"$align\" target=\"$t\" id=\"$id\" class=\"$class\" name=\"$name\" type='button' value=\"$value\" $custom />
 													
 													";
 												break;
@@ -832,7 +937,7 @@ class PHJ
 												print $value;
 												break;
 											default:
-												print "<$tag tooltip='$tooltip' title='$title' align='$align' editable='$editable' id='$id' class='$class' name='$name' $custom>$value</$tag>";
+												print "<$tag tooltip=\"$tooltip\" title=\"$title\" align=\"$align\" editable=\"$editable\" id=\"$id\" class=\"$class\" name=\"$name\" $custom>$value</$tag>";
 												break;
 											
 										}
@@ -844,8 +949,8 @@ class PHJ
 											case "paypal":
 											case "pay-pal":
 												
-												$send="
-														<form tooltip='$tooltip' method=\"$method\" name=\"$name\" action=\"$value\" $custom>
+												print "
+														<form tooltip=\"$tooltip\" method=\"$method\" name=\"$name\" action=\"$value\" $custom>
 															<input type=\"hidden\" name=\"business\" value=\"$vendor\" />
 															<input type=\"hidden\" name=\"cmd\" value=\"$cmd\" />
 															<input type=\"hidden\" name=\"upload\" value=\"$upload\">
@@ -877,28 +982,28 @@ class PHJ
 												break;
 											case "txt":
 											case "text":
-												$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML' />";
+												print "<input tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='text' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 												break;
 											case "voice":
-												$send="<input tooltip='$tooltip' minlength='$min' maxlength='$max' $custom type=\"text\" speech>";
+												print "<input tooltip=\"$tooltip\" minlength=\"$min\" maxlength=\"$max\" $custom type=\"text\" speech>";
 												break;
 											case "pass":
 											case "password":
-												$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' type='password' name='$name' placeholder='$value' value='$HTML' />";
+												print "<input tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='password' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 												break;
 											case "mail":
 											case "email":
-												$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
+												print "<input tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='email' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 												break;
 											case "txtarea":
 											case "textarea":
-												$send="<textarea tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
+												print "<textarea tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" name=\"$name\" placeholder=\"$value\" >$HTML</textarea>";
 												break;
 											case "option":
-												$send="<option tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' value='$value_item'>$value</option>";
+												print "<option tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" value='$value_item'>$value</option>";
 											break;
 											default:
-												$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' id='$id' class='$class' type='$tag' name='$name' value='$value' />";
+												print "<input tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='$tag' name=\"$name\" value=\"$value\" />";
 												break;
 											
 										}
@@ -907,21 +1012,29 @@ class PHJ
 											switch ($tag)
 											{
 												case "txt":
-													$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
+												case "text":
+													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='text' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
+													break;
+												case "voice":
+													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" maxlength=\"$max\" $custom type=\"text\" speech>";
 													break;
 												case "pass":
-													$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='text' name='$name' placeholder='$value' value='$HTML'/>";
+												case "password":
+													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='password' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 													break;
 												case "mail":
 												case "email":
-													$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='email' name='$name' placeholder='$value' value='$HTML' />";
+													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='email' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 													break;
 												case "txtarea":
 												case "textarea":
-													$send="<textarea tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' name='$name' placeholder='$value' >$HTML</textarea>";
+													print "<textarea required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" name=\"$name\" placeholder=\"$value\" >$HTML</textarea>";
 													break;
+												case "option":
+													print "<option required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" value='$value_item'>$value</option>";
+												break;
 												default:
-													$send="<input tooltip='$tooltip' minlength='$min' $custom title='$title' maxlength='$max' required='required' id='$id' class='$class' type='$tag' name='$name' placeholder='$value' />";
+													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='$tag' name=\"$name\" value=\"$value\" />";
 													break;
 											}
 											break;
@@ -976,35 +1089,37 @@ class PHJ
 										{
 												
 											case "php":
-												$send="src_php";
+													include ($value);
 												break;
-												
+											case "html":
+												print file_get_contents($value);
+												break;
 											case "img":
 											case "image":
-												$send="<img tooltip='$tooltip' $custom title='$title' align='$align' id=\"$id\" class=\"$class\" src=\"$root/$value\" width=\"$width\" height=\"$height\" />";
+												print "<img tooltip=\"$tooltip\" $custom title=\"$title\" align='$align' id=\"$id\" class=\"$class\" src=\"$value\" width=\"$width\" height=\"$height\" />";
 												break;
 												
 											case "video":
 												$skinned_name=str_replace(substr($value, strpos($value, "."),strlen($value)-strpos($value, ".")), "", $value);
 												
-												$send="
-													<video tooltip='$tooltip' $loop $muted title='$title' id=\"$id\" class='$class' $controls width='$width' height='$height' $custom >
-														<source src=\"$root/$value\" type=\"video/mp4\">
+												print "
+													<video tooltip=\"$tooltip\" $loop $muted title=\"$title\" id=\"$id\" class=\"$class\" $controls width='$width' height='$height' $custom >
+														<source src=\"$value\" type=\"video/mp4\">
 														$or
 													</video>";
 												break;
 											case "audio":
-												$send="
-												<audio tooltip='$tooltip' $custom title='$title' id=\"$id\" class='$class' controls>
-													<source src='$root/$value' type='audio/mpeg'>
+												print "
+												<audio tooltip=\"$tooltip\" $custom title=\"$title\" id=\"$id\" class=\"$class\" controls>
+													<source src='$value' type='audio/mpeg'>
 													$or
 												</audio>";
 												break;
 											case "mirror":
-												$send=file_get_contents("$value");
+												print file_get_contents("$value");
 												break;
 											case "file":
-												$send=file_get_contents("$root/$value");
+												print file_get_contents("$root/$value");
 												break;
 											case "youtube":
 												/*/////////////////////////////YouTube/////////////////////////////////////////////*/
@@ -1036,7 +1151,7 @@ class PHJ
 													{
 														$article_video_list=null;
 													}
-													$send="<iframe tooltip='$tooltip' $custom width=\"$width\" height=\"$height\" id='$id' title='$title' align='$align' class='$class' src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent' frameborder='0' allowfullscreen></iframe>";
+													print "<iframe tooltip=\"$tooltip\" $custom width=\"$width\" height=\"$height\" id=\"$id\" title=\"$title\" align='$align' class=\"$class\" src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent' frameborder='0' allowfullscreen></iframe>";
 												}
 												/*/////////////////////////////YouTube/////////////////////////////////////////////*/
 												break;
@@ -1046,12 +1161,12 @@ class PHJ
 												$wiki_start=strpos($wiki, "<div id=\"mw-content-text\"");
 												$wiki_length=strpos($wiki, "<p><span id=\"interwiki-en-ga\"></span>")-$wiki_start;
 												
-												$send=substr($wiki, $wiki_start, $wiki_length)."</div>";
+												print substr($wiki, $wiki_start, $wiki_length)."</div>";
 												break;
 										}
 										break;
 									case "a":
-											$send="<a tooltip='$tooltip' $custom title='$title' id='$id' class='$class' href='$value'>$tag</a>";
+											print "<a tooltip=\"$tooltip\" $custom title=\"$title\" id=\"$id\" class=\"$class\" href='$value'>$tag</a>";
 										break;
 									case "VAR":
 									case "var":
@@ -1073,99 +1188,13 @@ class PHJ
 								}
 								if(isset($send))
 								{
-									if (is_array($send))
-									{
-										foreach ($send as $piece)
-										{
-											if($piece!="." && $piece!="..")
-											{
-												if(substr($value, 0, 2)=="./")
-												{
-													$value=substr($value, 2);
-												}
-												switch ($index)
-												{
-													case "css":
-														
-														print "<link rel='stylesheet' type='text/css' href='$root/$value/$piece' />";
-														break;
-														/*----------------------------*/
-													case "js":
-														print "<script type='text/javascript' src='$root/$value/$piece' ></script>";
-														break;
-												}
-											}
-										}
-									}
 									/*****************************************
 									*
-									*
+									*DO NOTHING if isset($send)
 									*/
-									elseif(!is_array($send))
-									{
-										switch ($send)
-										{
-											case "harvest_data":
-												
-												if(isset($_GET["$name"]))
-												{
-													$url=$_GET["$name"];
-													$url=rtrim($url,'/');
-													$url=explode("/", $url);
-													
-													
-													if(isset($url[0]))
-													{
-														require "$value/".$url[0].".php";
-													}
-													else
-													{
-														require "$value/".$or.".php";
-													}
-													
-													$controller=new $url[0];
-													
-													if(isset($url[2]))
-													{
-														
-														$controller->{$url[1]}($url[2]);
-													}
-													else
-													{
-														if(isset($url[1]))
-														{
-															$controller->{$url[1]}();
-														}
-													}
-													
-												}
-												/*elseif(!isset($_GET["$name"]))
-												{
-													require "$value/".$or.".php";
-													
-													$controller=new $or;
-													
-													print_r($url);
-												}*/
-	
-												break;
-											case "src_php":
-												if(strpos($value, ".html")==strlen($value)-5)
-												{
-													print file_get_contents($value);
-												}
-												else 
-												{
-													include ($value);
-												}
-												break;
-											default:
-												print $send;
-												break;
-										}
-									}
+									
 									/****************************************
-									 * 
+									 * END
 									 * 
 									 */
 								}
@@ -1221,7 +1250,7 @@ function YouTubeVideo($Contenuto,$id,$class,$autoplay)
 		{
 			$article_video_list=null;
 		}
-		$YoutubeVideo="<iframe id='$id' class='$class' src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent&autoplay=$autoplay' frameborder='0' allowfullscreen></iframe>";
+		$YoutubeVideo="<iframe id=\"$id\" class=\"$class\" src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent&autoplay=$autoplay' frameborder='0' allowfullscreen></iframe>";
 		return $YoutubeVideo;
 	}
 	/*////////////////////////////////////////YOUTUBE*/
@@ -1257,7 +1286,7 @@ function YouTubeThumb($Contenuto,$id,$class)
 		{
 			$article_video_list=null;
 		}
-		$YoutubeThumb="<img align='right' id='$id' class='$class' src='http://i1.ytimg.com/vi/$article_video_code/default.jpg' />";
+		$YoutubeThumb="<img align='right' id=\"$id\" class=\"$class\" src='http://i1.ytimg.com/vi/$article_video_code/default.jpg' />";
 		return $YoutubeThumb;
 	}
 	/*////////////////////////////////////////YOUTUBE*/
@@ -1302,7 +1331,7 @@ function YouTubeSuggestions($Contenuto,$id,$class)
 			{
 				$element=str_replace(">", "&gt;", str_replace("<", "&lt;", substr($suggestion, 1,11)));
 				
-				$YoutubeThumb="<a id='a_$id' class='a_$class' target='_blank' href='http://youtube.com/watch?v=$element'><img id='$id' class='$class' src='http://i1.ytimg.com/vi/$element/default.jpg' /></a>";
+				$YoutubeThumb="<a id='a_$id' class='a_$class' target='_blank' href='http://youtube.com/watch?v=$element'><img id=\"$id\" class=\"$class\" src='http://i1.ytimg.com/vi/$element/default.jpg' /></a>";
 				
 				print "$YoutubeThumb";
 
@@ -1325,4 +1354,74 @@ function setupHtaccess($PhpFile,$VariableName)
 
 	", FILE_APPEND);
 }
+function listFolderFiles($dir,$type,$exceptthis){
+	$ffs = scandir($dir);
+	$sourcelist=array();
+	if (strpos($exceptthis, ","))
+		$exceptthis=explode(",", $exceptthis);
+	foreach($ffs as $ff){
+		$lastofthis=end(explode(".", $ff));
+		
+		switch ($exceptthis){
+			case "none":
+			case "":
+			case "0":
+			case null:
+				if($ff != '.' && $ff != '..'){
+					if($lastofthis==$type)
+					{
+						switch ($type){
+							case "css":
+								print "<link rel='stylesheet' type='text/css' href='$dir/$ff'>";
+								break;
+							case "js":
+								print "<script type='text/javascript' src='$dir/$ff'></script>";
+								break;
+						}
+					}
+					if(is_dir($dir.'/'.$ff)) listFolderFiles($dir.'/'.$ff,$type,"none");
+				}
+				break;
+			case "subdirectories":
+			case "subfolders":
+				if($ff != '.' && $ff != '..'){
+					if($lastofthis==$type)
+					{
+						switch ($type){
+							case "css":
+								print "<link rel='stylesheet' type='text/css' href='$dir/$ff'>";
+								break;
+							case "js":
+								print "<script type='text/javascript' src='$dir/$ff'></script>";
+								break;
+						}
+					}
+				}
+				break;
+			default:
+				$pass=true;
+				$fullpath="$dir/$ff";
+				
+				if($ff != '.' && $ff != '..' && $ff!=$exceptthis && $fullpath!="$exceptthis" && $dir!="$exceptthis" && $pass=true){
+					if($lastofthis==$type)
+					{
+						switch ($type){
+							case "css":
+								print "<link rel='stylesheet' type='text/css' href='$dir/$ff'>";
+								break;
+							case "js":
+								print "<script type='text/javascript' src='$dir/$ff'></script>";
+								break;
+						}
+					}
+					if(is_dir($dir.'/'.$ff)) listFolderFiles($dir.'/'.$ff,$type,"$exceptthis");
+						
+				}
+				break;
+			}
+		
+	}
+}
+
+
 ?>
