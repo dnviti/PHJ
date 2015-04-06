@@ -175,6 +175,7 @@ class PHJ
 										"editable:editable",
 										"VAR:VAR_name",
 										"var:var",
+										"style:style",
 										"name:name",
 										"wait:wait",
 										"time:time",
@@ -292,7 +293,7 @@ class PHJ
 								
 									$do_length=strpos(substr($content, $es+$do_start), "]");
 								
-									$do=preg_replace('/!\s+(?=\S*)/', ";",str_replace($clean_e=array("[","]"), "", substr($content, $es+$do_start+2, $do_length-1)));
+									$do=str_replace($clean_e=array("[","]"), "", substr($content, $es+$do_start+2, $do_length-1));
 									
 									/*$do=preg_replace('//', $replacement, $subject);
 									preg_grep($pattern, $input);***
@@ -412,24 +413,26 @@ class PHJ
 										{
 											case "data_from":
 											case "data":
-												switch ($method)
+												switch (strtoupper($method))
 												{
 													case "GET":
+													
 														if(isset($_GET["$value"]))
 														{
-															$url=$_GET["$value"];
-															$url=rtrim($url,'/');
-															$url=end(explode("/", $url));
-															print str_replace('$_PHJ_DATA', $url, $as);
+															$mydata=$_GET["$value"];
+															$mydata=rtrim($mydata,'/');
+															$mydata=end(explode("/", $mydata));
+															
+															print str_replace('$_PHJ_DATA', $mydata, $as);
 														}
 														break;
 													case "POST":
 														if(isset($_POST["$value"]))
 														{
-															$url=$_POST["$value"];
-															$url=rtrim($url,'/');
-															$url=explode("/", $url);
-															print str_replace('$_PHJ_DATA', $url, $as);
+															$mydata=$_POST["$value"];
+															$mydata=rtrim($mydata,'/');
+															$mydata=explode("/", $mydata);
+															print str_replace('$_PHJ_DATA', $mydata, $as);
 														}
 														break;
 													default:
@@ -882,7 +885,7 @@ class PHJ
 												break;
 											case "prettify":
 													$value=recognizeLink(htmlspecialchars(file_get_contents($value)));
-													print "<pre tooltip=\"$tooltip\" title=\"$title\" align=\"$align\" name=\"$name\" $custom";
+													print "<pre to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" title=\"$title\" align=\"$align\" name=\"$name\" $custom";
 													if(isset($id))
 													{
 														print " id=\"$id\" ";
@@ -929,7 +932,7 @@ class PHJ
 														$button_url="$value";
 													}
 													print "
-													<input onclick='window.location.replace(\"$button_url\")' tooltip=\"$tooltip\" title=\"$title\" align=\"$align\" target=\"$t\" id=\"$id\" class=\"$class\" name=\"$name\" type='button' value=\"$value\" $custom />
+													<input to=\"$to\" style=\"$style\" onclick='window.location.replace(\"$button_url\")' tooltip=\"$tooltip\" title=\"$title\" align=\"$align\" target=\"$t\" id=\"$id\" class=\"$class\" name=\"$name\" type='button' value=\"$value\" $custom />
 													
 													";
 												break;
@@ -937,7 +940,7 @@ class PHJ
 												print $value;
 												break;
 											default:
-												print "<$tag tooltip=\"$tooltip\" title=\"$title\" align=\"$align\" editable=\"$editable\" id=\"$id\" class=\"$class\" name=\"$name\" $custom>$value</$tag>";
+												print "<$tag to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" title=\"$title\" align=\"$align\" editable=\"$editable\" id=\"$id\" class=\"$class\" name=\"$name\" $custom>$value</$tag>";
 												break;
 											
 										}
@@ -950,7 +953,7 @@ class PHJ
 											case "pay-pal":
 												
 												print "
-														<form tooltip=\"$tooltip\" method=\"$method\" name=\"$name\" action=\"$value\" $custom>
+														<form to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" method=\"$method\" name=\"$name\" action=\"$value\" $custom>
 															<input type=\"hidden\" name=\"business\" value=\"$vendor\" />
 															<input type=\"hidden\" name=\"cmd\" value=\"$cmd\" />
 															<input type=\"hidden\" name=\"upload\" value=\"$upload\">
@@ -982,28 +985,28 @@ class PHJ
 												break;
 											case "txt":
 											case "text":
-												print "<input tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='text' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
+												print "<input to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='text' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 												break;
 											case "voice":
-												print "<input tooltip=\"$tooltip\" minlength=\"$min\" maxlength=\"$max\" $custom type=\"text\" speech>";
+												print "<input to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" minlength=\"$min\" maxlength=\"$max\" $custom type=\"text\" speech>";
 												break;
 											case "pass":
 											case "password":
-												print "<input tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='password' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
+												print "<input to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='password' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 												break;
 											case "mail":
 											case "email":
-												print "<input tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='email' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
+												print "<input to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='email' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 												break;
 											case "txtarea":
 											case "textarea":
-												print "<textarea tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" name=\"$name\" placeholder=\"$value\" >$HTML</textarea>";
+												print "<textarea to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" name=\"$name\" placeholder=\"$value\" >$HTML</textarea>";
 												break;
 											case "option":
-												print "<option tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" value='$value_item'>$value</option>";
+												print "<option to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" value='$value_item'>$value</option>";
 											break;
 											default:
-												print "<input tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='$tag' name=\"$name\" value=\"$value\" />";
+												print "<input to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='$tag' name=\"$name\" value=\"$value\" />";
 												break;
 											
 										}
@@ -1013,28 +1016,28 @@ class PHJ
 											{
 												case "txt":
 												case "text":
-													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='text' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
+													print "<input to=\"$to\" style=\"$style\" required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='text' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 													break;
 												case "voice":
-													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" maxlength=\"$max\" $custom type=\"text\" speech>";
+													print "<input to=\"$to\" style=\"$style\" required='required' tooltip=\"$tooltip\" minlength=\"$min\" maxlength=\"$max\" $custom type=\"text\" speech>";
 													break;
 												case "pass":
 												case "password":
-													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='password' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
+													print "<input to=\"$to\" style=\"$style\" required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='password' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 													break;
 												case "mail":
 												case "email":
-													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='email' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
+													print "<input to=\"$to\" style=\"$style\" required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='email' name=\"$name\" placeholder=\"$value\" value=\"$HTML\" />";
 													break;
 												case "txtarea":
 												case "textarea":
-													print "<textarea required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" name=\"$name\" placeholder=\"$value\" >$HTML</textarea>";
+													print "<textarea to=\"$to\" style=\"$style\" required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" name=\"$name\" placeholder=\"$value\" >$HTML</textarea>";
 													break;
 												case "option":
-													print "<option required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" value='$value_item'>$value</option>";
+													print "<option to=\"$to\" style=\"$style\" required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" value='$value_item'>$value</option>";
 												break;
 												default:
-													print "<input required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='$tag' name=\"$name\" value=\"$value\" />";
+													print "<input to=\"$to\" style=\"$style\" required='required' tooltip=\"$tooltip\" minlength=\"$min\" $custom title=\"$title\" maxlength=\"$max\" id=\"$id\" class=\"$class\" type='$tag' name=\"$name\" value=\"$value\" />";
 													break;
 											}
 											break;
@@ -1096,7 +1099,7 @@ class PHJ
 												break;
 											case "img":
 											case "image":
-												print "<img tooltip=\"$tooltip\" $custom title=\"$title\" align='$align' id=\"$id\" class=\"$class\" src=\"$value\" width=\"$width\" height=\"$height\" />";
+												print "<img to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" $custom title=\"$title\" align='$align' id=\"$id\" class=\"$class\" src=\"$value\" width=\"$width\" height=\"$height\" />";
 												break;
 												
 											case "video":
@@ -1151,7 +1154,7 @@ class PHJ
 													{
 														$article_video_list=null;
 													}
-													print "<iframe tooltip=\"$tooltip\" $custom width=\"$width\" height=\"$height\" id=\"$id\" title=\"$title\" align='$align' class=\"$class\" src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent' frameborder='0' allowfullscreen></iframe>";
+													print "<iframe to=\"$to\" style=\"$style\" tooltip=\"$tooltip\" $custom width=\"$width\" height=\"$height\" id=\"$id\" title=\"$title\" align='$align' class=\"$class\" src='//www.youtube.com/embed/$article_video_code$article_video_list?wmode=transparent' frameborder='0' allowfullscreen></iframe>";
 												}
 												/*/////////////////////////////YouTube/////////////////////////////////////////////*/
 												break;
@@ -1166,7 +1169,7 @@ class PHJ
 										}
 										break;
 									case "a":
-											print "<a tooltip=\"$tooltip\" $custom title=\"$title\" id=\"$id\" class=\"$class\" href='$value'>$tag</a>";
+											print "<a to=\"$to\" style\"$style\" tooltip=\"$tooltip\" $custom title=\"$title\" id=\"$id\" class=\"$class\" href='$value'>$tag</a>";
 										break;
 									case "VAR":
 									case "var":
@@ -1341,7 +1344,7 @@ function YouTubeSuggestions($Contenuto,$id,$class)
 	}
 	/*////////////////////////////////////////YOUTUBE*/
 }
-function setupHtaccess($PhpFile,$VariableName)
+function setupHtaccess($VariableName)
 {
 	file_put_contents(".htaccess","
 	RewriteEngine on
@@ -1350,7 +1353,7 @@ function setupHtaccess($PhpFile,$VariableName)
 	RewriteCond %{REQUEST_FILENAME} !-d
 	RewriteCond %{REQUEST_FILENAME} !-l
 
-	RewriteRule ^(.+)$ $PhpFile?$VariableName=$1 [QSA,L]
+	RewriteRule ^(.+)$ $VariableName=$1 [QSA,L]
 
 	", FILE_APPEND);
 }
