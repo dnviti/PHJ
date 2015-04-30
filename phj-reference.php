@@ -78,9 +78,14 @@ name: name of your url variable.You defined this inside
 *********************************************************************/
 
 
-js.uselist("js_directory_path");
+js.uselist("js_directory_path")except["exceptions"];
 /*Includes every javascript file that is located inside the specified directory.
 Arguments(1): path of your javascript files' folder.
+NOTE: this will include every single JavaScript file inside the specified folder AND
+inside every other subfolder.
+except: files or folders to exclude.
+	e.g: js.uselist("./js")except["min.js,mobile"];
+	this adds an exception for the "min.js" file and the "mobile" subfolders
 ********************************************************************/
 
 
@@ -111,6 +116,11 @@ do: css code that will be evaluated.PHJ requires you to end your
 css.uselist("css_directory_path");
 /*Includes every css file that is located inside the specified directory.
 Arguments(1): path of your css files' folder.
+NOTE: this will include every single CSS file inside the specified folder AND
+inside every other subfolder.
+except: files or folders to exclude.
+	e.g: css.uselist("./css")except["min.css,mobile"];
+	this adds an exception for the "min.css" file and the "mobile" subfolders
 *******************************************************************/
 
 
