@@ -3,7 +3,7 @@
  *
 * @author Tanase Razvan
 * @return Events created in the main.phj file.This is a PARSER for PHJ.
-* @version 1.30 Official 07/02/2015
+* @version 1.40 Official 29/04/2015
 */
 header('Content-Type: text/html; charset=utf-8');
 
@@ -774,23 +774,44 @@ class PHJ
 														$ajax_var_name=str_replace("HTML:", "", str_replace(".", "class_", str_replace("#", "id_", $ajax_var)));
 														
 														$ajax_htmlcheck_var=$ajax_var;
+														$old_ajax_var=$ajax_var;
+														$is="";
+														if(count(explode(":", $old_ajax_var))>1){
+															$ajax_var=explode(":", $old_ajax_var);
+															$is=":".$ajax_var[1];
+															$ajax_var=$ajax_var[0];
+															$checked=true;
+														} 
+														else $checked=false;
+
+														$ajax_htmlcheck_var=preg_replace('/\s+/', '', $ajax_htmlcheck_var);
+														$ajax_var=preg_replace('/\s+/', '', $ajax_var);
 														
-														switch (substr(trim($ajax_htmlcheck_var), 0,1))
+														switch (substr(trim(preg_replace('/\s+/', '', $ajax_htmlcheck_var)), 0,1))
 														{
 															case "#": 
 																print "var id_".substr($ajax_var, strpos(trim($ajax_var), "#")+1)."=$(\"$ajax_var\").val();"; 
 																break;
 															case ".": 
-																print "var class_".substr($ajax_var, strpos(trim($ajax_var), ".")+1)."=$(\"$ajax_var\").val();"; 
+																print "var class_".substr($ajax_var, strpos(trim($ajax_var), ".")+1)."=[];
+																		$(\"$ajax_var$is\").each(function(){";
+																		if($checked){
+																			print "class_".substr($ajax_var, strpos(trim($ajax_var), ".")+1).".push($(this).val());";
+																		}
+																		else {print "class_".substr($ajax_var, strpos(trim($ajax_var), ".")+1).".push($(this).val());";}
+																		print "
+																	    });
+														       			class_".substr($ajax_var, strpos(trim($ajax_var), ".")+1)."=JSON.stringify(class_".substr($ajax_var, strpos(trim($ajax_var), ".")+1).");
+																		"; 
 																break;
 														}
-														switch (substr(trim($ajax_htmlcheck_var), 0,5))
+														switch (substr(trim(preg_replace('/\s+/', '', $ajax_htmlcheck_var)), 0,5))
 														{
 															case "html.": 
 																print "var html_".substr($ajax_var, strpos(trim($ajax_var), "html.")+5)."=$(\"".substr($ajax_var, strpos(trim($ajax_var), "html.")+5)."\").html();"; 
 																break;
 														}
-														switch (substr(trim($ajax_htmlcheck_var), 0,4))
+														switch (substr(trim(preg_replace('/\s+/', '', $ajax_htmlcheck_var)), 0,4))
 														{
 															case "dom.": 
 																print "var dom_".substr($ajax_var, strpos(trim($ajax_var), "dom.")+4)."=$(".substr($ajax_var, strpos(trim($ajax_var), "dom.")+4).").val();";
@@ -807,9 +828,17 @@ class PHJ
 															$count_var=1;
 															foreach ($_SESSION["data_list"] as $ajax_var)
 															{
+																$old_ajax_var=$ajax_var;
+																if($ajax_var=explode(":", $old_ajax_var)){
+																	$ajax_var=$ajax_var[0];
+																	$checked=true;
+																}
+																else $checked=false;
+																$ajax_var=preg_replace('/\s+/', '', $ajax_var);
 																switch (substr(trim($ajax_var), 0,1))
 																{
 																	case "#": 
+																		
 																		$ajax_var_name="id_".substr($ajax_var, strpos(trim($ajax_var), "#")+1); 
 																		break;
 																	case ".": 
@@ -839,11 +868,8 @@ class PHJ
 																	print "+'&$ajax_var_name='+$ajax_var_name";
 																}
 															}
-															print ",
-															success: function(data)
-															{
-																$do
-															}
+															print ",\n$do
+															
 														});
 														";
 												break;
